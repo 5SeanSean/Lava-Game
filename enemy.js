@@ -407,7 +407,7 @@ export function setupEnemies(canvas, ctx, ball, endGame, platforms, projectiles,
         const y = worldBounds.bottom; // Spawn at the bottom of the world bounds
         const size = Math.random()*30+40;
         const speed = Math.random()*0.5+0.5;
-        const   peed = Math.random()*1+speed+1;
+        const projectileSpeed = Math.random()*1+speed+1;
         const shootInterval = Math.random()*500+3000;
         enemies.push(new Enemy(x, y, size, speed, projectileSpeed, shootInterval, worldBounds, canvas));
     }
