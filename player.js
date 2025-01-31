@@ -2,12 +2,12 @@
 export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
     const ball = {
         x: worldBounds.right/2,  
-        y: canvas.height/17,
+        y: canvas.height/16,
         radius: canvas.height/18,
         speed: canvas.height/270,
         dx: 0,
-        dy: canvas.height/1000,
-        gravity: canvas.height/1000,
+        dy: 0,
+        gravity: canvas.height/2000,
         jumpPower: -canvas.height/100,
         isJumping: false,
         canDoubleJump: true,
@@ -37,9 +37,9 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
     function resetPlayer() {
         ball.isGameRunning = false;
         ball.x = worldBounds.right/2;
-        ball.y = canvas.height/17;
+        ball.y = canvas.height/16;
         ball.dx = 0;
-        ball.dy = canvas.height/1000;
+        ball.dy = 0;
         ball.isJumping = false;
         ball.canDoubleJump = true; // Reset double jump when game ends
         ball.radius= canvas.height/18;
