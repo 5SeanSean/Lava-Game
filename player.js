@@ -37,15 +37,17 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
     function resetPlayer() {
         ball.isGameRunning = false;
         ball.x = worldBounds.right/2;
-        ball.y = 30;
+        ball.y = canvas.height/17;
         ball.dx = 0;
         ball.dy = 0;
         ball.isJumping = false;
         ball.canDoubleJump = true; // Reset double jump when game ends
-        ball.radius= canvas.height/20;
+        ball.radius= canvas.height/18;
         // Clear projectiles
        
-        projectiles.length = 0; 
+        
+    
+        ball.lastDashTime= 0;
         
          // Set isGameRunning to false before starting the game
 
