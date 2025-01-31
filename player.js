@@ -2,8 +2,8 @@
 export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
     const ball = {
         x: worldBounds.right/2,  
-        y: canvas.height/20,
-        radius: canvas.height/20,
+        y: canvas.height/18,
+        radius: canvas.height/18,
         speed: canvas.height/270,
         dx: 0,
         dy: 0,
