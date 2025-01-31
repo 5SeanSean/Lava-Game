@@ -7,7 +7,7 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         speed: canvas.height/270,
         dx: 0,
         dy: 0,
-        gravity: canvas.height/10000,
+        gravity: canvas.height/20000,
         jumpPower: -canvas.height/100,
         isJumping: false,
         canDoubleJump: true,
