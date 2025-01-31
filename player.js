@@ -2,18 +2,18 @@
 export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
     const ball = {
         x: worldBounds.right/2,  
-        y: 30,
+        y: canvas.height/20,
         radius: canvas.height/20,
         speed: canvas.height/270,
         dx: 0,
         dy: 0,
-        gravity: canvas.height/15000+0.05,
-        jumpPower: -canvas.height/100-0.2,
+        gravity: canvas.height/15000,
+        jumpPower: -canvas.height/100,
         isJumping: false,
         canDoubleJump: true,
-        friction: 0.9,
+        friction: canvas.height/1080,
         fireRate: 1000 / 6,//4 per second
-        projSpeed: 10,
+        projSpeed: canvas.height/108,
         lastDashTime: 0,
         isGameRunning: false,
         
