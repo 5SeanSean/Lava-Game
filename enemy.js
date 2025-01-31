@@ -405,7 +405,7 @@ export function setupEnemies(canvas, ctx, ball, endGame, platforms, projectiles,
         if(enemies.length > 4) return; // Limit the number of enemies on the screen
         const x = Math.random()>0.5 ? ball.x+500 : ball.x-500; // Spawn within the visible width of the canvas centered on the player
         const y = worldBounds.bottom; // Spawn at the bottom of the world bounds
-        const size = Math.random()*(canvas.height/20)+(canvas.height/10);
+        const size = Math.random()*(canvas.height/40)+(canvas.height/20);
         const speed = Math.random()*0.5+0.5;
         const projectileSpeed = Math.random()*1+speed+1;
         const shootInterval = Math.random()*500+3000;
