@@ -1,5 +1,5 @@
 // filepath: /h:/Downloads/PLATZIO/playerConsumables.js
-
+import { createLava } from "./lava.js";
 
 export class Consumable {
     constructor(x, y, size, color, shape = 'square', xPhysics =0, yPhysics =0) {
@@ -11,10 +11,11 @@ export class Consumable {
         this.speed = Math.random() *2+1;
         this.dx = 0;
         this.dy = 0;
-        this.gravity = 0.05;
+        this.gravity = 0.1;
         this.splashed = false;
         this.yPhysics = yPhysics;
         this.xPhysics = xPhysics;
+        this.speed = 0;
     }
 
     draw(ctx) {
@@ -32,23 +33,9 @@ export class Consumable {
     
     update(platforms, worldBounds) {
         // Apply gravity
-        this.dy += this.gravity;
-
-        // Move the consumable
-        this.x += this.dx;
-        this.y += this.dy;
-        if(this.y > worldBounds.bottom-60 - this.size/2) {
-            this.dy = 0;
-            this.gravity = 0;
-            this.dx = Math.random() * 0.5 + 0.5;
-                
-        }
-        else{
-            this.gravity = 0.05;
-            this.dx = 0;
-            
-        }
         
+
+
         
         
         
@@ -116,15 +103,27 @@ export function drawConsumables(ctx, consumables) {
     consumables.forEach(consumable => consumable.draw(ctx));
 }
 
-export function updateConsumables(consumables, ball, projectiles, endGame, platforms, worldBounds, enemies) {
+export function updateConsumables(consumables, ball, projectiles, endGame, platforms, worldBounds, enemies, createLava) {
     for (let i = consumables.length - 1; i >= 0; i--) {
 
         
     
         
         const consumable = consumables[i];
-        consumable.x+=consumable.xPhysics;
-        consumable.y+=consumable.xPhysics;
+        const angle = Math.atan2(ball.y - consumable.y- consumable.size/2, ball.x - consumable.x- consumable.size/2);
+        
+        
+        
+        consumable.x+= consumable.dx + consumable.xPhysics;
+        if(consumable.speed > 0){
+            consumable.dy = (Math.sin(angle) * consumable.speed);
+            consumable.dx = Math.cos(angle) * consumable.speed;
+        }
+        else{
+            consumable.dy += consumable.gravity;
+            
+        }
+        consumable.y+= consumable.dy+ consumable.yPhysics;
         projectiles.forEach((projectile, projectileIndex) => {
             if (projectile.x + projectile.radius > consumable.x &&
                 projectile.x - projectile.radius < consumable.x + consumable.size &&
@@ -132,10 +131,9 @@ export function updateConsumables(consumables, ball, projectiles, endGame, platf
                 projectile.y - projectile.radius < consumable.y + consumable.size) {
                 
                 // Collision detected with projectile
-                consumable.xPhysics = -projectile.dx;
-                consumable.yPhysics = -projectile.dy;
+                consumable.speed++;
                 
-                projectiles.splice(projectileIndex, 1); // Remove the projectile
+               
             }
             
         });
@@ -153,7 +151,7 @@ export function updateConsumables(consumables, ball, projectiles, endGame, platf
         }
         if (consumable.update(platforms, worldBounds) || consumable.checkCollision(ball)|| consumable.checkEnContact(enemies)) {
             if (consumable.checkCollision(ball)) {
-                ball.radius += consumable.size/4; // Increase player's size
+                ball.radius += consumable.size/6; // Increase player's size
             }
 
             consumables.splice(i, 1); // Remove the consumable
