@@ -29,7 +29,7 @@ function setup() {
     let gameActive = true;
 
     // Initialize lava
-    let lava = createLava(worldBounds);
+    let lava = createLava(worldBounds, canvas);
 
     // Define the endGame function
     function endGame() {
@@ -56,7 +56,7 @@ function setup() {
         enemies.length = 0; // Clear the enemies array
         platformsObj.generatePlatforms(); // No need to pass worldBounds
         consumables.length = 0; // Clear the consumables array
-        lava = createLava(worldBounds); // Re-initialize lava
+        lava = createLava(worldBounds, canvas); // Re-initialize lava
         document.getElementById('gameOverlay').style.visibility = 'hidden';
         gameActive = true; // Set gameActive to true to resume the game
     });
@@ -68,7 +68,7 @@ function setup() {
             enemies.length = 0; // Clear the enemies array
             platformsObj.generatePlatforms(); // No need to pass worldBounds
             consumables.length = 0;
-            lava = createLava(worldBounds); // Re-initialize lava
+            lava = createLava(worldBounds, canvas); // Re-initialize lava
             document.getElementById('gameOverlay').style.visibility = 'hidden';
 
             gameActive = true; // Set gameActive to true to resume the game
@@ -79,7 +79,7 @@ function setup() {
     const tickDuration = 1000 / 120; // 128 ticks per second
     setInterval(() => {
         if (gameActive) {
-            updateConsumables(consumables, ball, projectiles, endGame, platforms, worldBounds, enemies);
+            updateConsumables(consumables, ball, projectiles, endGame, platforms, worldBounds, enemies, createLava);
             updateBall();
             handleShooting();
             updateProjectiles();
