@@ -20,7 +20,7 @@ export function getRandomLavaColor() {
     }
     return color;
 }
-export function createLava(worldBounds) {
+export function createLava(worldBounds,canvas) {
     const lines = [];
     const splashes = []; // Initialize splashes array
 
@@ -49,9 +49,9 @@ export function createLava(worldBounds) {
 
     return {
         x: 0,
-        y: worldBounds.bottom - 50,
+        y: worldBounds.bottom - canvas.height/18,
         width: worldBounds.right,
-        height: 50,
+        height: canvas.height/18,
         draw(ctx) {
             ctx.fillStyle = 'red';
             ctx.fillRect(this.x, this.y, this.width, this.height);
@@ -80,10 +80,13 @@ export function createLava(worldBounds) {
             for (let i = consumables.length - 1; i >= 0; i--) {
                 const consumable = consumables[i];
 
-                if (consumable.y + consumable.size > this.y && !this.splashed) {
+                if (consumable.y + consumable.size > this.y && !consumable.splashed) {
                     // Consumable has collided with lava
                     splashes.push(new Splash(consumable.x, this.y, 5, getRandomLavaColor()));
-                    this.splashed = true;
+                    consumable.splashed = true;
+                    consumable.dy = 0;
+                    consumable.gravity = 0;
+                    consumable.dx = Math.random() * 0.5 + 0.5;
                 }
             }
             // Update splashes
