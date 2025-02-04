@@ -186,7 +186,7 @@ if (ball.x - ball.radius < worldBounds.left) {
             const right = platform.x + platform.width;
     
             // Check for top collision
-            if (ball.dy >= 0 && ball.y + ball.radius > top && ball.y < top && ball.x + ball.radius > left && ball.x < right) {
+            if (ball.dy >= 0 && ball.y + ball.radius > top && ball.y < top && ball.x + ball.radius > left && ball.x - ball.radius< right) {
                 
                 if(ball.dy > 12){
                     
@@ -216,8 +216,17 @@ if (ball.x - ball.radius < worldBounds.left) {
                         
                 ball.canDoubleJump = true;
                 ball.isJumping = false;
+
+            //edges
+            if (ball.x  < left&& ball.dx <= 0) {
+                
+                ball.y = -Math.sqrt(Math.pow(ball.radius, 2) - Math.pow(left - ball.x, 2)) + top;
+                
+            } else if (ball.x  > right && ball.dx >= 0) {
+                ball.y = -Math.sqrt(Math.pow(ball.radius, 2) - Math.pow(ball.x- right, 2)) + top;
+
             }
-            
+        }
     
             // Check for bottom collision
             if ( ball.y - ball.radius < bottom && ball.y > bottom && ball.x + ball.radius > left && ball.x-ball.radius < right) {

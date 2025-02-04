@@ -233,14 +233,17 @@ export class Enemy {
                 // Collision from the bottom
                 else if ( this.y < platform.y + platform.height && this.y + this.size > platform.y + platform.height) {
                     this.y = platform.y + platform.height;
-                    if(platform.yPhysics>6){
+                    if(platform.yPhysics>platform.height/8){
                         this.y =  platform.y+platform.height;
                         
                         this.hitCount++;
-                        platform.yPhysics /=2;
+                        platform.yPhysics /= 1.01;
+                        if(platform.hits >=3){
+                            this.hitCount = 30;
+                        }
                         
                     }
-                    this.yPhysics = (platform.yPhysics+platform.dy);
+                    
                     
 
                 }
@@ -328,12 +331,13 @@ export class Enemy {
                 const index = enemies.indexOf(this);
                     
                         enemies.splice(index, 1);
-                    
+                        
                     
                     return;
                 }
                 else{
                     ballHarming(ball);
+                    this.splashes.push(new Splash(ball.x, ball.y,ball.size,'255,255,255','circle'));
                 }
         }
 

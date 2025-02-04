@@ -73,10 +73,10 @@ export function setupPlatforms(canvas, worldBounds) {
     function genSidePlatX(){
         let sideX;
         if(Math.random()>0.5){
-            sideX = Math.random() * ((worldBounds.right/2)- (worldBounds.right/30) - (worldBounds.right/50));
+            sideX = Math.random() * ((worldBounds.right/2)- (worldBounds.right/25) - (worldBounds.right/50));
         }
         else{
-            sideX = Math.random() * (worldBounds.right/2)+100 + (worldBounds.right/2);
+            sideX = Math.random() * ((worldBounds.right/2) - ((worldBounds.right/30) + (worldBounds.right/50)))+ (worldBounds.right/30) + (worldBounds.right/50)+ (worldBounds.right/2);
         }
         return sideX;
     }
