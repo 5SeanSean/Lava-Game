@@ -197,6 +197,9 @@ export class Enemy {
     
                 // Increase the hit count
                 this.hitCount++;
+                if(this.hitCount >= 30){
+                    projectiles.splice(index, 1);
+                }
                 this.splashes.push(new Splash(projectile.x, projectile.y,this.size,'255,0,0','square'));
                 this.xPhysics = projectile.dx/3;
                 this.yPhysics = projectile.dy/3;
