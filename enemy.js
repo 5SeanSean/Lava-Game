@@ -5,7 +5,7 @@ import { getRandomLavaColor } from './lava.js';
 
 
 export class Enemy {
-    constructor(x, y, size, speed, projectileSpeed, shootInterval, worldBounds, canvas) {
+    constructor(x, y, size, speed, projectileSpeed, shootInterval, worldBounds, canvas, health =20) {
         this.x = x;
         this.y = y;
         this.size = size;
@@ -16,6 +16,7 @@ export class Enemy {
         this.shootInterval = shootInterval;
         this.lastShotTime = 0;
         this.hitCount = 0;
+        this.health = health;
         this.color = 'red';
         this.projectiles = [];
         this.worldBounds = worldBounds; // Store world bounds
@@ -34,7 +35,7 @@ export class Enemy {
         const stickEndX = this.x + this.size / 2 + stickLength * Math.cos(angle);
         const stickEndY = this.y + this.size / 2 + stickLength * Math.sin(angle);
         const maxOpacity = 1; // Maximum opacity of the overlay
-        const opacityPerHit = maxOpacity / 30; 
+        const opacityPerHit = maxOpacity / this.health; 
         const currentOpacity = Math.min(this.hitCount * opacityPerHit, maxOpacity);
         this.splashes.forEach(splash => splash.draw(ctx));
         
@@ -42,7 +43,7 @@ export class Enemy {
     const glowOffset = (glowSize - this.size) / 2;
 
     const baseColor = [255, 0, 0]; 
-    const hitFactor = this.hitCount / 30; // Assuming 4 hits is max
+    const hitFactor = this.hitCount / this.health; // Assuming 4 hits is max
     const glowColor = baseColor.map(channel => Math.min(255, channel + (255 - channel) * hitFactor));
 
     // Create a radial gradient for the glow
