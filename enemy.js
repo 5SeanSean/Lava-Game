@@ -344,8 +344,8 @@ export class Enemy {
         const dy = speed * Math.sin(angle);
 
         this.projectiles.push({
-            x: this.x + this.size / 2,
-            y: this.y + this.size / 2,
+            x: this.x +this.size/2+ this.size  * Math.cos(angle),
+            y: this.y +this.size/2 + this.size  * Math.sin(angle),
             radius: 5,
             dx: dx,
             dy: dy,
