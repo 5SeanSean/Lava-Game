@@ -14,14 +14,28 @@ function setup() {
     // Set canvas size to fill the screen
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    const fadeOverlay = document.getElementById('fadeOverlay');
 
+    function fadeIn() {
+        fadeOverlay.style.opacity = '1';
+        fadeOverlay.style.display = 'block';
+        setTimeout(() => {
+            fadeOverlay.style.opacity = '0';
+            setTimeout(() => {
+                fadeOverlay.style.display = 'none';
+            }, 2000); // Hide the overlay after the fade transition completes
+        }, 100);
+    }
+
+    // Initial fade in
+    fadeIn();
     
 
     // Initialize platform-related functions and variables
     const platformsObj = setupPlatforms(canvas, worldBounds);
     const platforms = platformsObj.platforms; // Extract the platforms array
     const updatePlatforms = platformsObj.updatePlatforms;
-     const { drawBall, drawProjectiles, updateBall, updateProjectiles, handleShooting, ball, projectiles, resetPlayer } = setupPlayer(canvas, ctx, platforms, endGame, worldBounds);
+    const { drawBall, drawProjectiles, updateBall, updateProjectiles, handleShooting, ball, projectiles, resetPlayer } = setupPlayer(canvas, ctx, platforms, endGame, worldBounds);
     const background = new Background(canvas, worldBounds);
 
     // Define the consumables array
@@ -59,6 +73,7 @@ function setup() {
         lava = createLava(worldBounds, canvas); // Re-initialize lava
         document.getElementById('gameOverlay').style.visibility = 'hidden';
         gameActive = true; // Set gameActive to true to resume the game
+        fadeIn();
     });
 
     // Add event listener for the spacebar to reset the game
@@ -72,6 +87,7 @@ function setup() {
             document.getElementById('gameOverlay').style.visibility = 'hidden';
 
             gameActive = true; // Set gameActive to true to resume the game
+            fadeIn();
         }
     });
     
@@ -85,7 +101,7 @@ function setup() {
             updateProjectiles();
            
             updateEnemies();
-            updatePlatforms();
+            updatePlatforms(ball);
             lava.update(consumables); // Update lava
             lava.handleCollision(ball, endGame); // Check collision with lava
         }

@@ -1,6 +1,6 @@
 // filepath: /h:/Downloads/PLATZIO/playerConsumables.js
 import { createLava } from "./lava.js";
-
+import { physics } from "./physics.js";
 export class Consumable {
     constructor(x, y, size, color, shape = 'square', xPhysics =0, yPhysics =0) {
         this.x = x;
@@ -124,7 +124,7 @@ export function updateConsumables(consumables, ball, projectiles, endGame, platf
             
         }
         consumable.y+= consumable.dy+ consumable.yPhysics;
-        projectiles.forEach((projectile, projectileIndex) => {
+        ball.projectiles.forEach((projectile, projectileIndex) => {
             if (projectile.x + projectile.radius > consumable.x &&
                 projectile.x - projectile.radius < consumable.x + consumable.size &&
                 projectile.y + projectile.radius > consumable.y &&
@@ -137,18 +137,7 @@ export function updateConsumables(consumables, ball, projectiles, endGame, platf
             }
             
         });
-        if(consumable.yPhysics != 0){
-            consumable.yPhysics/=1.1;
-        }
-        if(Math.abs(consumable.yPhysics) <=0.3){
-            consumable.yPhysics = 0;
-        }
-        if(consumable.xPhysics != 0){
-            consumable.xPhysics/=1.1;
-        }
-        if(Math.abs(consumable.xPhysics) <=0.3){
-            consumable.xPhysics = 0;
-        }
+        physics(consumable);
         if (consumable.update(platforms, worldBounds) || consumable.checkCollision(ball)|| consumable.checkEnContact(enemies)) {
             if (consumable.checkCollision(ball)) {
                 ball.radius += consumable.size/6; // Increase player's size

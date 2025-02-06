@@ -1,7 +1,7 @@
 import { createLava } from './lava.js';
 import { Splash } from './splash.js';
 import { worldBounds } from './view.js';
-
+import { physics } from './physics.js';
 
 
 export function setupPlatforms(canvas, worldBounds) {
@@ -248,7 +248,7 @@ export function setupPlatforms(canvas, worldBounds) {
         splashes.forEach(splash => splash.draw(ctx));
     }
 
-    function updatePlatforms() {
+    function updatePlatforms(ball) {
         // Instead of reassigning, we'll remove elements in-place
         for (let i = platforms.length - 1; i >= 0; i--) {
            
@@ -272,21 +272,125 @@ export function setupPlatforms(canvas, worldBounds) {
                     
                     otherPlatform.yPhysics = newPhysics;
                 }
+                else if (  otherPlatform.y + otherPlatform.height > platforms[i].y && otherPlatform.y <platforms[i].y && ((iLeft > jLeft && iLeft < jRight) || (iRight > jLeft && iRight < jRight))) {
+                    // Collision detected, set dy and yPhysics to the higher value
+                    
+                    platforms[i].y =otherPlatform.y + otherPlatform.height;
+                    let newDY= (platforms[i].dy+ otherPlatform.dy)/2;
+                    platforms[i].dy = newDY;
+                    otherPlatform.dy = newDY;
+                    let newPhysics = (platforms[i].yPhysics+otherPlatform.yPhysics)/2;
+                    platforms[i].yPhysics = newPhysics;
+                    
+                    otherPlatform.yPhysics = newPhysics;
+                }
             }
         });
-            if(platforms[i].yPhysics != 0){
-                platforms[i].yPhysics/=1.1;
-            }
-            if(Math.abs(platforms[i].yPhysics) <=0.3){
-                platforms[i].yPhysics = 0;
-            }
-            if(platforms[i].y>worldBounds.bottom + 50){
+
+        physics(platforms[i]);
+            
+            if(platforms[i].y>worldBounds.bottom){
                 newPlatform();
                 platforms[i].toRemove = true;
             }
             if (platforms[i].toRemove) {
                 platforms.splice(i, 1);
             }
+            let platform = platforms[i];
+            const top = platform.y;
+            const bottom = platform.y + platform.height;
+            const left = platform.x;
+            const right = platform.x + platform.width;
+    
+            // Check for top collision
+            if (ball.dy >= 0 && ball.y + ball.radius > top && ball.y < top && ball.x + ball.radius > left && ball.x - ball.radius< right) {
+                
+                if(ball.dy > 12){
+                    
+                    platform.yPhysics += (ball.dy); 
+                    
+                    platform.updated = true;
+                     // Mark the platform as updated
+                    
+                    platform.hitPlatform();
+                    if(!ball.isGameRunning){ball.isGameRunning = true;}
+                    if(platform.hits <3){
+                        ball.y = platform.y - ball.radius;
+                        ball.dy = -ball.dy/5;
+                        }
+                        else{
+                            ball.dy =ball.dy /2;
+                            
+                        }
+                    }
+                    else{
+                        ball.dy = platform.dy;
+                        
+                    }
+                    
+                    
+                        ball.y = top - ball.radius;
+                        
+                ball.canDoubleJump = true;
+                ball.isJumping = false;
+
+            //edges
+            if (ball.x  < left&& ball.dx <= 0) {
+                
+                ball.y = -Math.sqrt(Math.pow(ball.radius, 2) - Math.pow(left - ball.x, 2)) + top;
+                
+            } else if (ball.x  > right && ball.dx >= 0) {
+                ball.y = -Math.sqrt(Math.pow(ball.radius, 2) - Math.pow(ball.x- right, 2)) + top;
+
+            }
+        }
+    
+            // Check for bottom collision
+            if ( ball.y - ball.radius < bottom && ball.y > bottom && ball.x + ball.radius > left && ball.x-ball.radius < right) {
+                
+                
+                if(ball.dy < -ball.radius/8){
+                    platform.yPhysics = ball.dy*1.6;
+                    platform.updated = true;
+                     
+                    
+                    platform.hitPlatform();
+                    ball.canDoubleJump = false;
+                    if(platform.hits <3){
+                        ball.y = platform.y+platform.height + ball.radius;
+                        ball.dy = -ball.dy/5;
+                        }
+                        else{
+                            ball.dy = ball.dy/2;
+                            
+                        }
+                    }
+                    else if (ball.dy >0){
+                        
+                        platform.y = ball.y-ball.radius-platform.height ;
+                        
+                    }
+                    else{
+                        ball.dy = -ball.dy/2;
+                    }
+                        
+                
+                ball.isJumping = true;
+            }
+    
+            // Check for left collision
+            if (ball.dx > 0 && ball.x + ball.radius > left && ball.x < left && ball.y + ball.radius > top && ball.y < bottom && ball.dx > 0) {
+                ball.x = left- ball.radius;
+                ball.xPhysics = -ball.dx;
+            }
+    
+            // Check for right collision
+            if (ball.dx < 0 && ball.x - ball.radius < right && ball.x > right && ball.y + ball.radius > top && ball.y < bottom && ball.dx < 0) {
+                ball.x = right+ ball.radius;
+                ball.xPhysics = -ball.dx;
+            }
+
+
         }
         for (let i = splashes.length - 1; i >= 0; i--) {
             splashes[i].update();

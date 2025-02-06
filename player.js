@@ -16,7 +16,7 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         projSpeed: canvas.height/108,
         lastDashTime: 0,
         isGameRunning: false,
-        
+        projectiles: []
     };
     const pCamera = {
         x: 0,
@@ -43,7 +43,7 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         ball.isJumping = false;
         ball.canDoubleJump = true; // Reset double jump when game ends
         ball.radius= canvas.height/18;
-        // Clear projectiles
+        
        
         
     
@@ -65,7 +65,7 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         s: false
     };
 
-    const projectiles= [];
+    
     let isShooting = false;
     let lastShotTime = 0;
     const fireRate = ball.fireRate; 
@@ -121,6 +121,7 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
 
     function drawProjectiles() {
         ctx.fillStyle = 'white';
+        let projectiles = ball.projectiles;
         projectiles.forEach(projectile => {
             ctx.beginPath();
             ctx.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
@@ -178,125 +179,39 @@ if (ball.x - ball.radius < worldBounds.left) {
         ball.canDoubleJump = true;
     }
         // Check for collisions with platforms
-        platforms.forEach(platform => {
-            // Get top, bottom, left, and right coordinates
-            const top = platform.y;
-            const bottom = platform.y + platform.height;
-            const left = platform.x;
-            const right = platform.x + platform.width;
-    
-            // Check for top collision
-            if (ball.dy >= 0 && ball.y + ball.radius > top && ball.y < top && ball.x + ball.radius > left && ball.x - ball.radius< right) {
-                
-                if(ball.dy > 12){
-                    
-                    platform.yPhysics += (ball.dy); 
-                    
-                    platform.updated = true;
-                     // Mark the platform as updated
-                    
-                    platform.hitPlatform();
-                    if(!ball.isGameRunning){ball.isGameRunning = true;}
-                    if(platform.hits <3){
-                        ball.y = platform.y - ball.radius;
-                        ball.dy = -ball.dy/5;
-                        }
-                        else{
-                            ball.dy =ball.dy /2;
-                            
-                        }
-                    }
-                    else{
-                        ball.dy = platform.dy;
-                        
-                    }
-                    
-                    
-                        ball.y = top - ball.radius;
-                        
-                ball.canDoubleJump = true;
-                ball.isJumping = false;
-
-            //edges
-            if (ball.x  < left&& ball.dx <= 0) {
-                
-                ball.y = -Math.sqrt(Math.pow(ball.radius, 2) - Math.pow(left - ball.x, 2)) + top;
-                
-            } else if (ball.x  > right && ball.dx >= 0) {
-                ball.y = -Math.sqrt(Math.pow(ball.radius, 2) - Math.pow(ball.x- right, 2)) + top;
-
-            }
-        }
-    
-            // Check for bottom collision
-            if ( ball.y - ball.radius < bottom && ball.y > bottom && ball.x + ball.radius > left && ball.x-ball.radius < right) {
-                
-                
-                if(ball.dy < -3){
-                    platform.yPhysics = ball.dy*1.6;
-                    platform.updated = true;
-                     
-                    
-                    platform.hitPlatform();
-                    ball.canDoubleJump = false;
-                    if(platform.hits <3){
-                        ball.y = platform.y+platform.height + ball.radius;
-                        ball.dy = -ball.dy/5;
-                        }
-                        else{
-                            ball.dy = ball.dy/2;
-                            
-                        }
-                    }
-                    else{
-                        ball.y = platform.y+platform.height + ball.radius+1;
-                        ball.dy = Math.abs(ball.dy)/2;
-                    }
-                    
-                        
-                
-                ball.isJumping = true;
-            }
-    
-            // Check for left collision
-            if (ball.dx > 0 && ball.x + ball.radius > left && ball.x < left && ball.y + ball.radius > top && ball.y < bottom && ball.dx > 0) {
-                ball.x = left- ball.radius;
-                
-            }
-    
-            // Check for right collision
-            if (ball.dx < 0 && ball.x - ball.radius < right && ball.x > right && ball.y + ball.radius > top && ball.y < bottom && ball.dx < 0) {
-                ball.x = right+ ball.radius;
-                
-            }
-        });
+        
        
         if (ball.radius < canvas.height/40) {
             endGame();
             
         }
+        
+        
     }
 
     function updateProjectiles() {
+        let projectiles = ball.projectiles;
+
         for (let i = projectiles.length - 1; i >= 0; i--) {
             const projectile = projectiles[i];
             projectile.x += projectile.dx;
             projectile.y += projectile.dy;
             
-            // Check for collisions with platforms
+            let nextProjX = projectile.x + projectile.dx;
+            let nextProjY = projectile.y + projectile.dy;
             platforms.forEach(platform => {
-                if (projectile.x + projectile.radius > platform.x &&
-                    projectile.x - projectile.radius < platform.x + platform.width &&
-                    projectile.y + projectile.radius > platform.y &&
-                    projectile.y - projectile.radius < platform.y + platform.height) {
+                if (nextProjX + projectile.radius > platform.x &&
+                    nextProjX - projectile.radius < platform.x + platform.width &&
+                    nextProjY + projectile.radius > platform.y &&
+                    nextProjY - projectile.radius < platform.y + platform.height) {
                     
                     // Collision from the top or bottom
-                    if (projectile.y - projectile.radius < platform.y || projectile.y + projectile.radius > platform.y + platform.height) {
+                    if (nextProjY - projectile.radius < platform.y || nextProjY + projectile.radius > platform.y + platform.height) {
                         projectile.dy = -projectile.dy;
                         projectile.ricochetCount++;
                     }
                     // Collision from the left or right
-                    if (projectile.x - projectile.radius < platform.x || projectile.x + projectile.radius > platform.x + platform.width) {
+                    if (nextProjX - projectile.radius < platform.x || nextProjX + projectile.radius > platform.x + platform.width) {
                         projectile.dx = -projectile.dx;
                         projectile.ricochetCount++;
                     }
@@ -305,21 +220,18 @@ if (ball.x - ball.radius < worldBounds.left) {
     
             // Check for collision with the player
             if (Math.hypot(projectile.x - ball.x, projectile.y - ball.y) < projectile.radius + ball.radius && projectile.ricochetCount >=1) {
-                if(projectile.radius>5){
-                    ball.radius += projectile.radius/2;
-                }
-                else{
-                    ball.radius += ball.radius/90;
-                }
+                
+                    ball.radius += projectile.radius/10;
+                
                 
                 projectiles.splice(i, 1); // Remove the projectile
                 continue;
             }
     
             // Remove projectile if it goes out of bounds or ricochets more than 3 times
-            if (projectile.x < ball.x-canvas.width/2 || projectile.x > ball.x+canvas.width/2 || projectile.y < 0 || projectile.y > worldBounds.bottom ) {
+            if (projectile.x < ball.x-canvas.width/2 || projectile.x > ball.x+canvas.width/2 || projectile.y < 0 || projectile.y > worldBounds.bottom || projectile.ricochetCount >= 3) {
                 
-                projectiles.splice(i, 1);
+                ball.projectiles.splice(i, 1);
             }
         }
     }
@@ -422,11 +334,11 @@ if (ball.x - ball.radius < worldBounds.left) {
         const speed = ball.projSpeed;
         const dx = speed * Math.cos(angle);
         const dy = speed * Math.sin(angle);
-        ball.radius-=ball.radius/90; // Reduce projectile size for smoother movement
-        projectiles.push({
+        ball.radius-=ball.radius/80; // Reduce projectile size for smoother movement
+        ball.projectiles.push({
             x: ball.x,
             y: ball.y,
-            radius: 5,
+            radius: ball.radius/8,
             dx: dx,
             dy: dy,
             ricochetCount: 0 // Initialize ricochet count
@@ -476,8 +388,7 @@ if (ball.x - ball.radius < worldBounds.left) {
         updateProjectiles,
         handleShooting,
         resetPlayer,
-        ball,
-        projectiles
+        ball
         
     };
    

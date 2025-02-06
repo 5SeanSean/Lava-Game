@@ -2,6 +2,7 @@ import { ballHarming } from './player.js';
 import { Splash } from './splash.js';
 import { Consumable } from './playerConsumables.js';
 import { getRandomLavaColor } from './lava.js';
+import { physics } from './physics.js';
 
 
 export class Enemy {
@@ -25,21 +26,23 @@ export class Enemy {
         this.stickColor = getRandomLavaColor();
         this.yPhysics =0;
         this.xPhysics = 0;
+        this.angle = 0;
     }
     
     draw(ctx, ball) {
         // Draw the stick pointing in the direction of the player
-        const angle = Math.atan2(ball.y - this.y- this.size/2, ball.x - this.x- this.size/2);
+        
         const stickLength = this.size; // Length of the stick
-        const stickEndX = this.x + this.size / 2 + stickLength * Math.cos(angle);
-        const stickEndY = this.y + this.size / 2 + stickLength * Math.sin(angle);
+        const stickEndX = this.x + this.size / 2 + stickLength * Math.cos(this.angle);
+        const stickEndY = this.y + this.size / 2 + stickLength * Math.sin(this.angle);
         const maxOpacity = 1; // Maximum opacity of the overlay
         const opacityPerHit = maxOpacity / 30; 
         const currentOpacity = Math.min(this.hitCount * opacityPerHit, maxOpacity);
         this.splashes.forEach(splash => splash.draw(ctx));
         
-        const glowSize = this.size*1.5; // Increase glow size for better visibility
-    const glowOffset = (glowSize - this.size) / 2;
+        const glowSize = this.size*1.6; // Increase glow size for better visibility
+    
+    const glowOffset = (glowSize / 2 - this.size / 2) ;
 
     const baseColor = [255, 0, 0]; 
     const hitFactor = this.hitCount / 30; // Assuming 4 hits is max
@@ -51,13 +54,13 @@ export class Enemy {
         this.x + this.size / 2, this.y + this.size / 2, glowSize / 2
     );
 
-    gradient.addColorStop(0, `rgba(${glowColor.join(',')}, 0.7)`);
-    gradient.addColorStop(0.5, `rgba(${glowColor.join(',')}, 0.3)`);
+    gradient.addColorStop(0, `rgba(${glowColor.join(',')}, 0.9)`);
+    gradient.addColorStop(0.5, `rgba(${glowColor.join(',')}, 0.35)`);
     gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
 
     // Draw the tapering glow
     ctx.fillStyle = gradient;
-    ctx.fillRect(this.x - glowOffset, this.y - glowOffset, glowSize, glowSize);
+    ctx.fillRect(this.x - (glowOffset ), this.y - (glowOffset ), glowSize, glowSize);
 
         this.projectiles.forEach(projectile => {
             ctx.beginPath();
@@ -133,10 +136,10 @@ export class Enemy {
     
     update(ball, projectiles, consumables, platforms, endGame, enemies) {
         // Calculate direction towards the player
-        const angle = Math.atan2(ball.y - this.y- this.size/2, ball.x - this.x- this.size/2);
-        this.dx = Math.cos(angle) * this.speed + this.xPhysics;
+        this.angle = Math.atan2(ball.y - this.y- this.size/2, ball.x - this.x- this.size/2);
+        this.dx = Math.cos(this.angle) * this.speed + this.xPhysics;
         
-        this.dy = Math.sin(angle) * this.speed + this.yPhysics;
+        this.dy = Math.sin(this.angle) * this.speed + this.yPhysics;
         
         if (this.hitCount >= 30) {
             // Create a new consumable at the enemy's position
@@ -157,18 +160,8 @@ export class Enemy {
         this.x += this.dx;
         this.y += this.dy + this.yPhysics;
 
-        if(this.yPhysics != 0){
-            this.yPhysics/=1.1;
-        }
-        if(Math.abs(this.yPhysics) <=0.3){
-            this.yPhysics = 0;
-        }
-        if(this.xPhysics != 0){
-            this.xPhysics/=1.1;
-        }
-        if(Math.abs(this.xPhysics) <=0.3){
-            this.xPhysics = 0;
-        }
+        physics(this);
+        
         // Check for collisions with other enemies
         enemies.forEach(otherEnemy => {
             if (otherEnemy !== this) {
@@ -186,7 +179,7 @@ export class Enemy {
         });
 
         // Check for collisions with projectiles
-        projectiles.forEach((projectile, index) => {
+        ball.projectiles.forEach((projectile, index) => {
             if (projectile.x + projectile.radius > this.x &&
                 projectile.x - projectile.radius < this.x + this.size &&
                 projectile.y + projectile.radius > this.y &&
@@ -196,9 +189,9 @@ export class Enemy {
             
     
                 // Increase the hit count
-                this.hitCount++;
+                this.hitCount+=projectile.radius/5;
                 if(this.hitCount >= 30){
-                    projectiles.splice(index, 1);
+                    ball.projectiles.splice(index, 1);
                 }
                 this.splashes.push(new Splash(projectile.x, projectile.y,this.size,'255,0,0','square'));
                 this.xPhysics = projectile.dx/3;
@@ -272,9 +265,6 @@ export class Enemy {
         if (this.y < this.worldBounds.top) {
             this.y = this.worldBounds.top;
             this.dy = 0;
-        } else if (this.y + this.size > this.worldBounds.bottom) {
-            this.y = this.worldBounds.bottom - this.size;
-            this.dy = 0;
         }
 
         // Shoot projectiles at intervals
@@ -325,7 +315,7 @@ export class Enemy {
         // Check for collision with the player
         if (Math.hypot(this.x + this.size / 2 - ball.x, this.y + this.size / 2 - ball.y) < this.size / 2 + ball.radius) {
             if(ball.dy>10){
-                setTimeout(ball.dy/=2, 500);
+                
                 const consumable = new Consumable(this.x, this.y, this.size, 'white', 'square', this.xPhysics, this.yPhysics);
                 consumables.push(consumable);
                 const index = enemies.indexOf(this);

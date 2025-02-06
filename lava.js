@@ -53,9 +53,17 @@ export function createLava(worldBounds,canvas) {
         width: worldBounds.right,
         height: canvas.height/18,
         draw(ctx) {
+            const gradient = ctx.createLinearGradient(this.x, this.y , this.x, this.y- this.height * 5 );
+            gradient.addColorStop(0, 'rgba(255, 0, 0, 0.6)');
+            gradient.addColorStop(0.05, 'rgba(255, 20, 0, 0.1)');
+            gradient.addColorStop(0.8, 'rgba(255, 100, 0, 0.05)');
+            gradient.addColorStop(1, 'rgba(255, 200, 0, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(this.x , this.y - this.height *5, this.width, this.y);
             ctx.fillStyle = 'red';
             ctx.fillRect(this.x, this.y, this.width, this.height);
-
+            // Draw red glow
+            
             // Draw moving rectangles
             lines.forEach(line => {
                 ctx.fillStyle = line.color;
