@@ -336,8 +336,8 @@ if (ball.x - ball.radius < worldBounds.left) {
         const dy = speed * Math.sin(angle);
         ball.radius-=ball.radius/80; // Reduce projectile size for smoother movement
         ball.projectiles.push({
-            x: ball.x,
-            y: ball.y,
+            x: ball.x + ball.radius * 1.7 * Math.cos(angle),
+            y: ball.y + ball.radius * 1.7 * Math.sin(angle),
             radius: ball.radius/8,
             dx: dx,
             dy: dy,

@@ -3,7 +3,7 @@ import { Splash } from './splash.js';
 import { Consumable } from './playerConsumables.js';
 import { getRandomLavaColor } from './lava.js';
 import { physics } from './physics.js';
-
+import { generalSplashes } from './splash.js';
 
 export class Enemy {
     constructor(x, y, size, speed, projectileSpeed, shootInterval, worldBounds, canvas, health =20) {
@@ -194,7 +194,7 @@ export class Enemy {
                 if(this.hitCount >= 30){
                     ball.projectiles.splice(index, 1);
                 }
-                this.splashes.push(new Splash(projectile.x, projectile.y,this.size,'255,0,0','square'));
+                this.splashes.push(new Splash(projectile.x, projectile.y,this.size/3,'lava','square'));
                 this.xPhysics = projectile.dx/3;
                 this.yPhysics = projectile.dy/3;
                 // Reduce the enemy size
@@ -290,12 +290,12 @@ export class Enemy {
                     
                     // Collision from the top or bottom
                     if (projectile.y - projectile.radius < platform.y || projectile.y + projectile.radius > platform.y + platform.height) {
-                        this.splashes.push(new Splash(projectile.x, projectile.y,this.size,'255,0,0','circle'));
+                        this.splashes.push(new Splash(projectile.x, projectile.y,this.size/3,'lava','square'));
                         this.projectiles.splice(i, 1);
                     }
                     // Collision from the left or right
                     if (projectile.x - projectile.radius < platform.x || projectile.x + projectile.radius > platform.x + platform.width) {
-                        this.splashes.push(new Splash(projectile.x, projectile.y,this.size,'255,0,0','circle'));
+                        this.splashes.push(new Splash(projectile.x, projectile.y,this.size/3,'lava','square'));
                         this.projectiles.splice(i, 1);
                     }
                 }
@@ -305,7 +305,7 @@ export class Enemy {
 
             // Check for collision with the player
             if (Math.hypot(projectile.x - ball.x, projectile.y - ball.y) < projectile.radius + ball.radius) {
-                this.splashes.push(new Splash(projectile.x, projectile.y,this.size,'255,255,255','circle'));
+                this.splashes.push(new Splash(projectile.x, projectile.y,projectile.radius*4,'255,255,255','circle'));
                 ballHarming(ball);
                 
                 
@@ -320,7 +320,7 @@ export class Enemy {
                 const consumable = new Consumable(this.x, this.y, this.size, 'white', 'square', this.xPhysics, this.yPhysics);
                 consumables.push(consumable);
                 const index = enemies.indexOf(this);
-                    
+                        generalSplashes.push(new Splash(this.x+this.size/2, this.y-this.size,this.size,'lava','square'));
                         enemies.splice(index, 1);
                         
                     
@@ -344,8 +344,8 @@ export class Enemy {
         const dy = speed * Math.sin(angle);
 
         this.projectiles.push({
-            x: this.x + this.size / 2,
-            y: this.y + this.size / 2,
+            x: this.x +this.size/2+ this.size  * Math.cos(angle),
+            y: this.y +this.size/2 + this.size  * Math.sin(angle),
             radius: 5,
             dx: dx,
             dy: dy,

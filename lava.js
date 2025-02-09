@@ -118,7 +118,7 @@ export function createLava(worldBounds,canvas) {
         handleCollision(ball) {
             
             if (this.checkKillCollision(ball)) {
-                splashes.push(new Splash(ball.x, ball.y, ball.dy, getRandomLavaColor())); 
+                splashes.push(new Splash(ball.x, ball.y, Math.abs(ball.dy)*ball.radius/15 + ball.radius/2, 'lava', 'square'));  
                 ballHarming(ball);
                 }
                     

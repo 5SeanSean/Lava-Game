@@ -6,6 +6,7 @@ import { setupEnemies } from './enemy.js';
 import { setupPlayer } from './player.js';
 import { createLava } from './lava.js';
 import { Background } from './background.js';
+import { generalSplashes } from './splash.js';
 
 function setup() {
     const canvas = document.getElementById('gameCanvas');
@@ -99,7 +100,9 @@ function setup() {
             updateBall();
             handleShooting();
             updateProjectiles();
-           
+            generalSplashes.forEach(splash => {
+                splash.update();
+                });
             updateEnemies();
             updatePlatforms(ball);
             lava.update(consumables); // Update lava
@@ -116,6 +119,7 @@ function setup() {
                 background.draw(camera);
                 platformsObj.drawPlatforms(ctx);
                 drawEnemies();
+                generalSplashes.forEach(splash => splash.draw(ctx));
                 drawConsumables(ctx, consumables);
                 lava.draw(ctx); // Draw lava
                 drawProjectiles();
