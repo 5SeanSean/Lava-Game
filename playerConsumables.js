@@ -140,6 +140,7 @@ export function updateConsumables(consumables, ball, projectiles, endGame, platf
         physics(consumable);
         if (consumable.update(platforms, worldBounds) || consumable.checkCollision(ball)|| consumable.checkEnContact(enemies)) {
             if (consumable.checkCollision(ball)) {
+                ball.score += consumable.size; 
                 ball.radius += consumable.size/6; // Increase player's size
             }
 

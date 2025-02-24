@@ -1,4 +1,4 @@
-
+import { physics } from './physics.js';
 export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
     const ball = {
         x: worldBounds.right/2,  
@@ -16,7 +16,11 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         projSpeed: canvas.height/108,
         lastDashTime: 0,
         isGameRunning: false,
-        projectiles: []
+        projectiles: [],
+        score: 0,
+        xPhysics: 0,
+        yPhysics: 0,
+    
     };
     const pCamera = {
         x: 0,
@@ -43,7 +47,7 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         ball.isJumping = false;
         ball.canDoubleJump = true; // Reset double jump when game ends
         ball.radius= canvas.height/18;
-        
+        ball.score = 0; 
        
         
     
@@ -93,17 +97,30 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
     ctx.moveTo(ball.x, ball.y);
     ctx.lineTo(stickEndX, stickEndY);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.lineWidth = ball.radius / 4;
+    ctx.lineWidth = ball.radius / 3;
     ctx.stroke();
     ctx.closePath();
-    
+        
         ctx.beginPath();
         ctx.moveTo(ball.x, ball.y);
         ctx.lineTo(stickEndX, stickEndY);
         ctx.strokeStyle = 'white';
-        ctx.lineWidth = ball.radius / 7;
+        ctx.lineWidth = ball.radius / 4;
         ctx.stroke();
         ctx.closePath();
+    
+        
+            ctx.beginPath();
+        ctx.arc(ball.x-ball.dx/2, ball.y-ball.dy/2, ball.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fill();
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.arc(ball.x-ball.dx, ball.y-ball.dy, ball.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.fill();
+        ctx.closePath();
+        
     
         // Draw the ball with glow
         ctx.beginPath();
@@ -132,16 +149,15 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
 
     function updateBall() {
         
-        
-         
+        ball.lastDY = ball.dy;
     
         updatePCamera();
-        document.getElementById('scoreCounter').innerText = `Size: ${Math.round(ball.radius)-20 }`;
-        if(ball.isGameRunning){
-        ball.x += ball.dx;
-        }
-        ball.y += ball.dy;
-
+        document.getElementById('scoreCounter').innerText = `Score: ${Math.round(ball.score) }`;
+        
+        ball.x += ball.dx + ball.xPhysics;
+        
+        ball.y += ball.dy + ball.yPhysics;
+        physics(ball);
         // Apply gravity
        
             ball.dy += ball.gravity;

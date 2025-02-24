@@ -4,15 +4,16 @@ import { Consumable } from './playerConsumables.js';
 import { getRandomLavaColor } from './lava.js';
 import { physics } from './physics.js';
 import { generalSplashes } from './splash.js';
+import { textToRGB } from './tools.js';
 
 export class Enemy {
-    constructor(x, y, size, speed, projectileSpeed, shootInterval, worldBounds, canvas, health =20) {
+    constructor(x, y, size, speed, projectileSpeed, shootInterval, worldBounds, canvas, angle, health =20) {
         this.x = x;
         this.y = y;
-        this.size = size;
+        this.size = size;   
         this.speed = speed;
-        this.dx = 0;
-        this.dy = 0;
+        this.dx = Math.cos(angle)*speed;
+        this.dy = Math.sin(angle)*speed;
         this.projectileSpeed = projectileSpeed;
         this.shootInterval = shootInterval;
         this.lastShotTime = 0;
@@ -27,7 +28,7 @@ export class Enemy {
         this.stickColor = getRandomLavaColor();
         this.yPhysics =0;
         this.xPhysics = 0;
-        this.angle = 0;
+        this.angle = angle;
     }
     
     draw(ctx, ball) {
@@ -41,41 +42,38 @@ export class Enemy {
         const currentOpacity = Math.min(this.hitCount * opacityPerHit, maxOpacity);
         this.splashes.forEach(splash => splash.draw(ctx));
         
-        const glowSize = this.size*1.6; // Increase glow size for better visibility
-    
-    const glowOffset = (glowSize / 2 - this.size / 2) ;
-
-    const baseColor = [255, 0, 0]; 
-    const hitFactor = this.hitCount / this.health; // Assuming 4 hits is max
-    const glowColor = baseColor.map(channel => Math.min(255, channel + (255 - channel) * hitFactor));
-
-    // Create a radial gradient for the glow
-    const gradient = ctx.createRadialGradient(
-        this.x + this.size / 2, this.y + this.size / 2, 0,
-        this.x + this.size / 2, this.y + this.size / 2, glowSize / 2
-    );
-
-    gradient.addColorStop(0, `rgba(${glowColor.join(',')}, 0.9)`);
-    gradient.addColorStop(0.5, `rgba(${glowColor.join(',')}, 0.35)`);
-    gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
-
-    // Draw the tapering glow
-    ctx.fillStyle = gradient;
-    ctx.fillRect(this.x - (glowOffset ), this.y - (glowOffset ), glowSize, glowSize);
+        
 
         this.projectiles.forEach(projectile => {
-            ctx.beginPath();
-            ctx.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
-            ctx.fillStyle = projectile.color;
-            ctx.fill();
-            ctx.closePath();
+            ctx.fillStyle = `rgba(${textToRGB('orange')}, 0.2)`;
+        ctx.fillRect(
+            projectile.x - projectile.radius*1.5, 
+            projectile.y - projectile.radius*1.5, 
+            projectile.radius * 3, 
+            projectile.radius * 3
+        );  
+        ctx.fillStyle = `rgba(${textToRGB('magma')}, 0.5)`;
+        ctx.fillRect(
+            projectile.x - projectile.radius*1.25, 
+            projectile.y - projectile.radius*1.25, 
+            projectile.radius * 2.5, 
+            projectile.radius * 2.5
+        );  
+            ctx.fillStyle = 'red';
+        ctx.fillRect(
+            projectile.x - projectile.radius*0.9, 
+            projectile.y - projectile.radius*0.9, 
+            projectile.radius * 1.8, 
+            projectile.radius * 1.8
+        );
+        
         });
     
         ctx.beginPath();
         ctx.moveTo(this.x + this.size / 2, this.y + this.size / 2);
         ctx.lineTo(stickEndX, stickEndY);
         ctx.strokeStyle = this.stickColor;
-        ctx.lineWidth = 4;
+        ctx.lineWidth = this.size/4;
         ctx.stroke();
         ctx.closePath();
         ctx.beginPath();
@@ -138,19 +136,18 @@ export class Enemy {
     update(ball, projectiles, consumables, platforms, endGame, enemies) {
         // Calculate direction towards the player
         this.angle = Math.atan2(ball.y - this.y- this.size/2, ball.x - this.x- this.size/2);
-        this.dx = Math.cos(this.angle) * this.speed + this.xPhysics;
         
-        this.dy = Math.sin(this.angle) * this.speed + this.yPhysics;
         
         if (this.hitCount >= 30) {
             // Create a new consumable at the enemy's position
             const consumable = new Consumable(this.x, this.y, this.size, 'white', 'square');
         consumables.push(consumable);
-        
+        ball.score+=this.size;
     
             // Remove this enemy from the game
             const index = enemies.indexOf(this);
             if (index > -1) {
+
                 enemies.splice(index, 1);
             }
     
@@ -158,7 +155,7 @@ export class Enemy {
             return;
         }
         // Move the enemy
-        this.x += this.dx;
+        this.x += this.dx + this.xPhysics;
         this.y += this.dy + this.yPhysics;
 
         physics(this);
@@ -166,15 +163,45 @@ export class Enemy {
         // Check for collisions with other enemies
         enemies.forEach(otherEnemy => {
             if (otherEnemy !== this) {
-                const dist = Math.hypot(this.x - otherEnemy.x, this.y - otherEnemy.y);
-                if (dist < this.size) {
-                    // Adjust positions to prevent overlap
-                    const overlap = this.size - dist;
-                    const angle = Math.atan2(this.y - otherEnemy.y, this.x - otherEnemy.x);
-                    this.x += Math.cos(angle) * overlap / 2;
-                    this.y += Math.sin(angle) * overlap / 2;
-                    otherEnemy.x -= Math.cos(angle) * overlap / 2;
-                    otherEnemy.y -= Math.sin(angle) * overlap / 2;
+                const otherNextX = otherEnemy.x + otherEnemy.dx;
+                const otherNextY = otherEnemy.y + otherEnemy.dy;
+                const thisNextX = this.x + this.dx;
+                const thisNextY = this.y + this.dy;
+                if (thisNextX + this.size > otherNextX &&
+                    thisNextX < otherNextX + otherEnemy.size &&
+                    thisNextY + this.size > otherNextY &&
+                    thisNextY < otherNextY + otherEnemy.size) {
+                    
+                    // other hitting from this bottom
+                    if ((this.dy >0 || otherEnemy.dy < 0)&& thisNextY + this.size > otherNextY && thisNextY < otherNextY) {
+                       
+                        
+                        this.dy = -Math.abs(this.dy);
+                       otherEnemy.dy = Math.abs(otherEnemy.dy);
+                    }
+                    // other from this top
+                     if ((this.dy <0 || otherEnemy.dy > 0) && thisNextY < otherNextY + otherEnemy.size && thisNextY > otherNextY) {
+                        
+                        
+                        this.dy = Math.abs(this.dy);
+                        otherEnemy.dy = -Math.abs(otherEnemy.dy);
+                    }
+                    // Collision from the left
+                     if ((this.dx >0 || otherEnemy.dx < 0) && thisNextX + this.size > otherNextX && thisNextX < otherNextX) {
+                        
+                       
+                        this.dx = Math.abs(this.dx);
+                        otherEnemy.dx = -Math.abs(otherEnemy.dx);
+                        
+                    }
+                    // Collision from the right
+                     if ((this.dx <0 || otherEnemy.dx > 0)&& thisNextX < otherNextX + otherEnemy.size && thisNextX + this.size > otherNextX + otherEnemy.size) {
+                        
+                        
+                        
+                        this.dx = -Math.abs(this.dx);
+                        otherEnemy.dx = Math.abs(otherEnemy.dx);
+                    }
                 }
             }
         });
@@ -187,11 +214,12 @@ export class Enemy {
                 projectile.y - projectile.radius < this.y + this.size) {
                 
                 // Remove the projectile
-            
+                ball.score+=0.1;
     
                 // Increase the hit count
                 this.hitCount+=projectile.radius/5;
                 if(this.hitCount >= 30){
+                    ball.score+=this.size;
                     ball.projectiles.splice(index, 1);
                 }
                 this.splashes.push(new Splash(projectile.x, projectile.y,this.size/3,'lava','square'));
@@ -219,37 +247,35 @@ export class Enemy {
                 this.y + this.size > platform.y &&
                 this.y < platform.y + platform.height) {
                 
-                // Collision from the top
-                if ( this.y + this.size > platform.y && this.y < platform.y) {
-                    this.y = platform.y - this.size;
-                    this.dy = 0;
+                if (this.dy <0 && this.y < platform.y + platform.height && this.y + this.size > platform.y + platform.height) {
+                    this.y = platform.y +platform.height*1.1;
+                        this.dy = Math.abs(this.dy);
+                        if(platform.yPhysics>0){
+                            this.yPhysics =  platform.yPhysics *1.1;
+                            
+                            this.hitCount+= this.yPhysics;
+                            platform.yPhysics /= 1.01;
+                            if(platform.hits >=3){
+                                this.hitCount = 30;
+                            }
+                            
+                        }
+                    }
+                else if ( this.dy >0 &&this.y + this.size > platform.y && this.y < platform.y) {
+                    this.y = platform.y - this.size*1.1;
+                    this.dy = -Math.abs(this.dy);
                 }
                 // Collision from the bottom
-                else if ( this.y < platform.y + platform.height && this.y + this.size > platform.y + platform.height) {
-                    this.y = platform.y + platform.height;
-                    if(platform.yPhysics>platform.height/8){
-                        this.y =  platform.y+platform.height;
-                        
-                        this.hitCount++;
-                        platform.yPhysics /= 1.01;
-                        if(platform.hits >=3){
-                            this.hitCount = 30;
-                        }
-                        
-                    }
-                    
-                    
-
-                }
+                
                 // Collision from the left
                 else if (this.dx > 0 && this.x + this.size > platform.x && this.x < platform.x) {
                     this.x = platform.x - this.size;
-                    this.dx = 0;
+                    this.dx = -Math.abs(this.dx);
                 }
                 // Collision from the right
                 else if (this.dx < 0 && this.x < platform.x + platform.width && this.x + this.size > platform.x + platform.width) {
                     this.x = platform.x + platform.width;
-                    this.dx = 0;
+                    this.dx = Math.abs(this.dx)
                 }
             }
         });
@@ -257,15 +283,18 @@ export class Enemy {
         // Handle world bounds
         if (this.x < this.worldBounds.left) {
             this.x = this.worldBounds.left;
-            this.dx = 0;
+            this.dx =  Math.abs(this.dx);
         } else if (this.x + this.size > this.worldBounds.right) {
             this.x = this.worldBounds.right - this.size;
-            this.dx = 0;
+            this.dx = -Math.abs(this.dx);
         }
 
         if (this.y < this.worldBounds.top) {
             this.y = this.worldBounds.top;
-            this.dy = 0;
+            this.dy = Math.abs(this.dy);
+        }
+        else if (this.y + this.size > this.worldBounds.bottom) {
+            this.dy = -Math.abs(this.dy);
         }
 
         // Shoot projectiles at intervals
@@ -315,8 +344,8 @@ export class Enemy {
 
         // Check for collision with the player
         if (Math.hypot(this.x + this.size / 2 - ball.x, this.y + this.size / 2 - ball.y) < this.size / 2 + ball.radius) {
-            if(ball.dy>10){
-                
+            if(ball.dy*ball.radius>this.size*8){
+                ball.score += this.size*2;
                 const consumable = new Consumable(this.x, this.y, this.size, 'white', 'square', this.xPhysics, this.yPhysics);
                 consumables.push(consumable);
                 const index = enemies.indexOf(this);
@@ -328,7 +357,7 @@ export class Enemy {
                 }
                 else{
                     ballHarming(ball);
-                    this.splashes.push(new Splash(ball.x, ball.y,ball.size,'255,255,255','circle'));
+                    this.splashes.push(new Splash(ball.x, ball.y,ball.radius,'255,255,255','circle'));
                 }
         }
 
@@ -337,20 +366,20 @@ export class Enemy {
         this.splashes = this.splashes.filter(splash => !splash.isFinished());
     }
 
-    shootProjectile(ball) {
-        const angle = Math.atan2(ball.y - this.y - this.size/2, ball.x - this.x- this.size/2);
+    shootProjectile() {
+        
         const speed = this.projectileSpeed;
-        const dx = speed * Math.cos(angle);
-        const dy = speed * Math.sin(angle);
+        const dx = speed * Math.cos(this.angle);
+        const dy = speed * Math.sin(this.angle);
 
         this.projectiles.push({
-            x: this.x +this.size/2+ this.size  * Math.cos(angle),
-            y: this.y +this.size/2 + this.size  * Math.sin(angle),
+            x: this.x +this.size/2+ this.size  * Math.cos(this.angle),
+            y: this.y +this.size/2 + this.size  * Math.sin(this.angle),
             radius: 5,
             dx: dx,
             dy: dy,
-            
-            color: 'red' // Initialize projectile color
+            shape: 'square', // Set the shape to 'square'
+            color: getRandomLavaColor() // Initialize projectile color
         });
     }
 
@@ -398,16 +427,19 @@ export function setupEnemies(canvas, ctx, ball, endGame, platforms, projectiles,
             enemies[i].update(ball, projectiles, consumables, platforms, endGame, enemies);
         }
     }
-
+   
     function spawnEnemy() {
-        if(enemies.length > 4) return; // Limit the number of enemies on the screen
+        if(enemies.length > 20) return; // Limit the number of enemies on the screen
         const x = Math.random()>0.5 ? ball.x+500 : ball.x-500; // Spawn within the visible width of the canvas centered on the player
+        
+        const size = Math.random()*(canvas.height/30)+(canvas.height/20);
         const y = worldBounds.bottom; // Spawn at the bottom of the world bounds
-        const size = Math.random()*(canvas.height/40)+(canvas.height/20);
-        const speed = Math.random()*0.5+0.5;
-        const projectileSpeed = Math.random()*1+speed+1;
-        const shootInterval = Math.random()*500+3000;
-        enemies.push(new Enemy(x, y, size, speed, projectileSpeed, shootInterval, worldBounds, canvas));
+        const speed = Math.random()*canvas.height/700+canvas.height/700;
+        const projectileSpeed = speed*1.1;
+        const shootInterval = Math.random()*1000+4000;
+        const angle = Math.random()*Math.PI*2;
+        
+        enemies.push(new Enemy(x, y, size, speed, projectileSpeed, shootInterval, worldBounds, canvas, angle));
     }
 
     setInterval(spawnEnemy, 4000);

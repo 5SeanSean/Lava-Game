@@ -14,11 +14,12 @@ export class Background {
         this.bottomGlowColor = 'rgba(255, 215, 0, 0.8)'; // Semi-transparent gold
     }
     drawOverlay(ball) {
+        
         let offsetX = 0;
         let offsetY =0;
          offsetX = ball.x * this.parallaxFactor;
          offsetY = ball.y * this.parallaxFactor;
-
+         
         const gradient = this.ctx.createLinearGradient(
             0, this.worldBounds.top - offsetY,
             0, this.worldBounds.bottom - offsetY
@@ -56,8 +57,8 @@ export class Background {
             streaks.push({
                 x: Math.random() * this.worldBounds.right,
                 y: Math.random() * this.worldBounds.bottom,
-                width: Math.random() * 40 + 40, // Random width between 20 and 70
-                height: Math.random() * 300 + 100, // Random height between 5 and 15
+                width: Math.random() * this.canvas.height/10 + this.canvas.height/10, // Random width between 20 and 70
+                height: Math.random() * this.canvas.height/3 + this.canvas.height/5, // Random height between 5 and 15
                 angle: Math.random() * Math.PI/5 +Math.PI/2.5, // Random angle
                 color: this.getRandomEarthTone() // Random earth-tone color
             });

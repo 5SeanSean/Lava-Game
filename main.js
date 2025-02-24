@@ -9,6 +9,7 @@ import { Background } from './background.js';
 import { generalSplashes } from './splash.js';
 
 function setup() {
+
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -16,7 +17,17 @@ function setup() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     const fadeOverlay = document.getElementById('fadeOverlay');
-
+    // Add this near the top of your setup function
+    let isWindowFocused = true;
+    window.addEventListener('focus', () => {
+        isWindowFocused = true;
+        
+    });
+    
+    window.addEventListener('blur', () => {
+        isWindowFocused = false;
+        
+    });
     function fadeIn() {
         fadeOverlay.style.opacity = '1';
         fadeOverlay.style.display = 'block';
@@ -47,14 +58,22 @@ function setup() {
     let lava = createLava(worldBounds, canvas);
 
     // Define the endGame function
+
     function endGame() {
         ball.isGameRunning = false;
         // Display the overlay and restart button
         const overlay = document.getElementById('gameOverlay');
         overlay.style.visibility = 'visible';
         gameActive = false; // Set gameActive to false to stop all entities
+
+        // Show the score counter at the middle of the screen
+        const scoreCounter = document.getElementById('scoreCounter');
         
+        scoreCounter.style.top = '65%';
+        scoreCounter.style.left = '50%';
+        scoreCounter.style.transform = 'translate(-50%, -50%)';
     }
+ 
 
     // Initialize player-related functions and variables first
    
@@ -74,6 +93,11 @@ function setup() {
         lava = createLava(worldBounds, canvas); // Re-initialize lava
         document.getElementById('gameOverlay').style.visibility = 'hidden';
         gameActive = true; // Set gameActive to true to resume the game
+        const scoreCounter = document.getElementById('scoreCounter');
+       
+        scoreCounter.style.top = '2%';
+        scoreCounter.style.left = '2%';
+        scoreCounter.style.transform = 'translate(0,0)';
         fadeIn();
     });
 
@@ -88,6 +112,9 @@ function setup() {
             document.getElementById('gameOverlay').style.visibility = 'hidden';
 
             gameActive = true; // Set gameActive to true to resume the game
+            scoreCounter.style.top = '2%';
+        scoreCounter.style.left = '2%';
+        scoreCounter.style.transform = 'translate(0,0)';
             fadeIn();
         }
     });
@@ -95,7 +122,7 @@ function setup() {
     // Update game logic at 128 ticks per second using setInterval
     const tickDuration = 1000 / 120; // 128 ticks per second
     setInterval(() => {
-        if (gameActive) {
+        if (gameActive&& isWindowFocused) {
             updateConsumables(consumables, ball, projectiles, endGame, platforms, worldBounds, enemies, createLava);
             updateBall();
             handleShooting();
