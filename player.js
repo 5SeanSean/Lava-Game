@@ -12,15 +12,16 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         isJumping: false,
         canDoubleJump: true,
         friction: canvas.height/1080,
-        fireRate: 1000 / 6,//4 per second
-        projSpeed: canvas.height/108,
-        lastDashTime: 0,
+        fireRate: 1,//4 per second
+        projSpeed: canvas.height/50,
+        
         isGameRunning: false,
         projectiles: [],
         score: 0,
         xPhysics: 0,
         yPhysics: 0,
-    
+        angle: 0,
+        strength: 1,
     };
     const pCamera = {
         x: 0,
@@ -48,10 +49,10 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         ball.canDoubleJump = true; // Reset double jump when game ends
         ball.radius= canvas.height/18;
         ball.score = 0; 
-       
+        isShooting = false;
         
     
-        ball.lastDashTime= 0;
+        
         
          // Set isGameRunning to false before starting the game
 
@@ -87,11 +88,11 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         mouseXAdjusted = mouseX+ pCamera.x;
         mouseYAdjusted = mouseY+ pCamera.y;
         // Draw the stick pointing in the direction of the cursor
-        const angle = Math.atan2(mouseYAdjusted - ball.y, mouseXAdjusted - ball.x);
+        
         
         const stickLength = ball.radius * 1.7; // Length of the stick
-        const stickEndX = ball.x + stickLength * Math.cos(angle);
-        const stickEndY = ball.y + stickLength * Math.sin(angle);
+        const stickEndX = ball.x + stickLength * Math.cos(ball.angle);
+        const stickEndY = ball.y + stickLength * Math.sin(ball.angle);
     
         ctx.beginPath();
     ctx.moveTo(ball.x, ball.y);
@@ -148,13 +149,13 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
     }
 
     function updateBall() {
-        
+        ball.angle = Math.atan2(mouseYAdjusted - ball.y, mouseXAdjusted - ball.x);
         ball.lastDY = ball.dy;
     
         updatePCamera();
         document.getElementById('scoreCounter').innerText = `Score: ${Math.round(ball.score) }`;
         
-        ball.x += ball.dx + ball.xPhysics;
+        ball.x += ball.dx* (0.2 +ball.strength*0.8) + ball.xPhysics ;
         
         ball.y += ball.dy + ball.yPhysics;
         physics(ball);
@@ -174,11 +175,11 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
 // Out of bounds
 if (ball.x - ball.radius < worldBounds.left) {
     ball.x = worldBounds.left + ball.radius;
-    ball.dx = 0;
+    ball.dx = -ball.dx/1.5;
 }
  else if (ball.x + ball.radius > worldBounds.right) {
     ball.x = worldBounds.right - ball.radius;
-    ball.dx = 0;
+    ball.dx = -ball.dx/1.5;
 }
 
     //ceiling bounce
@@ -202,7 +203,19 @@ if (ball.x - ball.radius < worldBounds.left) {
             
         }
         
+        if (ball.strength < 1) {
+            ball.strength += 0.05;
+        }
         
+        if (ball.strength < 0) {
+            ball.strength =0;
+        }
+
+        if(keys.s && ball.dy < 15 && ball.isGameRunning){
+            
+            ball.dy +=  0.5 * ball.strength;
+            ball.strength -= 0.06;
+        }
     }
 
     function updateProjectiles() {
@@ -210,9 +223,10 @@ if (ball.x - ball.radius < worldBounds.left) {
 
         for (let i = projectiles.length - 1; i >= 0; i--) {
             const projectile = projectiles[i];
+            
             projectile.x += projectile.dx;
             projectile.y += projectile.dy;
-            
+           
             let nextProjX = projectile.x + projectile.dx;
             let nextProjY = projectile.y + projectile.dy;
             platforms.forEach(platform => {
@@ -237,7 +251,7 @@ if (ball.x - ball.radius < worldBounds.left) {
             // Check for collision with the player
             if (Math.hypot(projectile.x - ball.x, projectile.y - ball.y) < projectile.radius + ball.radius && projectile.ricochetCount >=1) {
                 
-                    ball.radius += projectile.radius/10;
+                    ball.radius += ball.radius/1000;
                 
                 
                 projectiles.splice(i, 1); // Remove the projectile
@@ -271,29 +285,29 @@ if (ball.x - ball.radius < worldBounds.left) {
             case 'W':
             case 'ArrowUp':
                 if (!ball.isJumping && ball.isGameRunning) {
-                    ball.dy = ball.jumpPower;
+                    ball.dy = ball.jumpPower * ball.strength;
                     ball.isJumping = true;
                     ball.canDoubleJump = true; // Allow double jump after first jump
                 } else if (ball.canDoubleJump&& ball.isGameRunning) {
-                    ball.dy = ball.jumpPower;
+                    ball.dy = ball.jumpPower * ball.strength;
                     ball.canDoubleJump = false; // Disable double jump after using it
                 }
                 break;
             case 'a':
             case 'A':
             case 'ArrowLeft':
-                keys.a = true;
+                keys.a = ball.isGameRunning;
                 break;
             case 'd':
             case 'D':
             case 'ArrowRight':
-                keys.d = true;
+                keys.d = ball.isGameRunning;
                 break;
                 
                 case 's':
                 case 'S':
                 case 'ArrowDown':
-                    if(ball.isGameRunning){keys.s = true;}
+                    keys.s = ball.isGameRunning;
                     break;
         }
        
@@ -337,32 +351,33 @@ if (ball.x - ball.radius < worldBounds.left) {
         } else if (keys.d) {
             ball.dx = ball.speed;
         }
-        if(keys.s && (ball.dy > 1 || ball.dy < -1) && ball.lastDashTime < Date.now() - 500){
+        if(keys.s && ball.isGameRunning && ball.dy < 15){
             ball.dx =0;
-            ball.dy =  15;
+            ball.dy +=  0.5*ball.strength;
             ball.isJumping = false;
-            ball.lastDashTime = Date.now();
+            
         }
     }
 
     function shootProjectile() {
-    const angle = Math.atan2(mouseYAdjusted  - ball.y,mouseXAdjusted -  ball.x);
+    
         const speed = ball.projSpeed;
-        const dx = speed * Math.cos(angle);
-        const dy = speed * Math.sin(angle);
-        ball.radius-=ball.radius/80; // Reduce projectile size for smoother movement
+        const dx = speed * Math.cos(ball.angle);
+        const dy = speed * Math.sin(ball.angle);
+        ball.radius-=ball.radius/1000; // Reduce projectile size for smoother movement
         ball.projectiles.push({
-            x: ball.x + ball.radius * 1.7 * Math.cos(angle),
-            y: ball.y + ball.radius * 1.7 * Math.sin(angle),
-            radius: ball.radius/8,
+            x: ball.x + (ball.radius * 1.7 * Math.cos(ball.angle))/2,
+            y: ball.y + (ball.radius * 1.7 * Math.sin(ball.angle))/2,
+            radius: ball.radius/6,
             dx: dx,
             dy: dy,
-            ricochetCount: 0 // Initialize ricochet count
+            ricochetCount: 0, // Initialize ricochet count
+           
         });
     }
 
     function startShooting(event) {
-        if (event.button === 0) { // Left mouse button
+        if (event.button === 0 && ball.isGameRunning) { // Left mouse button
             const currentTime = Date.now();
             if (currentTime - lastShotTime >= fireRate) {
                 isShooting = true;
@@ -376,7 +391,7 @@ if (ball.x - ball.radius < worldBounds.left) {
     }
     
     function stopShooting(event) {
-        if (event.button === 0) { // Left mouse button
+        if (event.button === 0 ) { // Left mouse button
             isShooting = false;
         }
         // Update mouse position

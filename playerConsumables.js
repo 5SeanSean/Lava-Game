@@ -83,14 +83,14 @@ export class Consumable {
         return distance < this.size / 2 + ball.radius;
     }
 
-    checkEnContact(enemies) {
+    checkEnContact(squares) {
         let enConsumed = false;
-        enemies.forEach(enemy => {
-            const dist = Math.hypot(this.x - enemy.x, this.y - enemy.y);
+        squares.forEach(square => {
+            const dist = Math.hypot(this.x - square.x, this.y - square.y);
             if (dist < this.size)  {
-                enemy.size+= this.size/3;
-                enemy.x = enemy.x + enemy.size/2;
-                enemy.y = enemy.y + enemy.size/2;
+                square.size+= this.size/3;
+                square.x = square.x + square.size/2;
+                square.y = square.y + square.size/2;
                 enConsumed = true;
             }
                          
@@ -103,7 +103,7 @@ export function drawConsumables(ctx, consumables) {
     consumables.forEach(consumable => consumable.draw(ctx));
 }
 
-export function updateConsumables(consumables, ball, projectiles, endGame, platforms, worldBounds, enemies, createLava) {
+export function updateConsumables(consumables, ball, projectiles, endGame, platforms, worldBounds, squares, createLava) {
     for (let i = consumables.length - 1; i >= 0; i--) {
 
         
@@ -131,14 +131,14 @@ export function updateConsumables(consumables, ball, projectiles, endGame, platf
                 projectile.y - projectile.radius < consumable.y + consumable.size) {
                 
                 // Collision detected with projectile
-                consumable.speed++;
+                consumable.speed+=projectile.radius/100;
                 
                
             }
             
         });
         physics(consumable);
-        if (consumable.update(platforms, worldBounds) || consumable.checkCollision(ball)|| consumable.checkEnContact(enemies)) {
+        if (consumable.update(platforms, worldBounds) || consumable.checkCollision(ball)|| consumable.checkEnContact(squares)) {
             if (consumable.checkCollision(ball)) {
                 ball.score += consumable.size; 
                 ball.radius += consumable.size/6; // Increase player's size

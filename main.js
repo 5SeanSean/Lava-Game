@@ -2,14 +2,15 @@
 import { worldBounds,setupView } from './view.js';
 import { drawConsumables, updateConsumables } from './playerConsumables.js';
 import { setupPlatforms } from './platforms.js';
-import { setupEnemies } from './enemy.js';
+import { setupLavaSquares } from './lavaSquare.js';
 import { setupPlayer } from './player.js';
 import { createLava } from './lava.js';
 import { Background } from './background.js';
 import { generalSplashes } from './splash.js';
 
+export const winSizeConstant = (1920*1080)/(window.innerWidth * window.innerHeight);
 function setup() {
-
+    
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -81,13 +82,14 @@ function setup() {
     // Initialize view-related functions and variables
     const { camera, updateCamera, clearCanvas, drawWithCamera } = setupView(canvas, ctx, ball);
 
-    // Initialize enemy-related functions and variables
-    const { drawEnemies, updateEnemies, enemies } = setupEnemies(canvas, ctx, ball, endGame, platforms, projectiles, consumables, worldBounds);
-
+    // Initialize square-related functions and variables
+    const { drawLavaSquares, updateLavaSquares, lavaSquares } = setupLavaSquares(canvas, ctx, ball, endGame, platforms, projectiles, consumables, worldBounds);
+    
     // Add event listener for the restart button
     document.getElementById('restartButton').addEventListener('click', () => {
         resetPlayer();
-        enemies.length = 0; // Clear the enemies array
+        lavaSquares.length = 0; // Clear the squares array
+       
         platformsObj.generatePlatforms(); // No need to pass worldBounds
         consumables.length = 0; // Clear the consumables array
         lava = createLava(worldBounds, canvas); // Re-initialize lava
@@ -105,7 +107,8 @@ function setup() {
     document.addEventListener('keydown', (event) => {
         if (event.code === 'Space' && !gameActive) {
             resetPlayer();
-            enemies.length = 0; // Clear the enemies array
+            lavaSquares.length = 0; // Clear the squares array
+           
             platformsObj.generatePlatforms(); // No need to pass worldBounds
             consumables.length = 0;
             lava = createLava(worldBounds, canvas); // Re-initialize lava
@@ -123,14 +126,15 @@ function setup() {
     const tickDuration = 1000 / 120; // 128 ticks per second
     setInterval(() => {
         if (gameActive&& isWindowFocused) {
-            updateConsumables(consumables, ball, projectiles, endGame, platforms, worldBounds, enemies, createLava);
+            updateConsumables(consumables, ball, projectiles, endGame, platforms, worldBounds, lavaSquares, createLava);
             updateBall();
             handleShooting();
             updateProjectiles();
             generalSplashes.forEach(splash => {
                 splash.update();
                 });
-            updateEnemies();
+                updateLavaSquares();
+            
             updatePlatforms(ball);
             lava.update(consumables); // Update lava
             lava.handleCollision(ball, endGame); // Check collision with lava
@@ -145,7 +149,8 @@ function setup() {
             drawWithCamera(() => {
                 background.draw(camera);
                 platformsObj.drawPlatforms(ctx);
-                drawEnemies();
+                drawLavaSquares();
+                
                 generalSplashes.forEach(splash => splash.draw(ctx));
                 drawConsumables(ctx, consumables);
                 lava.draw(ctx); // Draw lava

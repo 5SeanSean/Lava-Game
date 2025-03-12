@@ -17,18 +17,20 @@ export function setupPlatforms(canvas, worldBounds) {
             y:-30,
             width: Math.random() *(worldBounds.right/30) + (worldBounds.right/50),
             height: Math.random() *(worldBounds.bottom/100) + (worldBounds.bottom/200),
+            dx: 0,
             dy: Math.random() *(canvas.height/3000)+(canvas.height/2000),
+            xPhysics: 0,
             yPhysics: 0,
             hits: 0,
             color: '#354859', // Initial color
             hitRectangles: [],
-            harmsEnemies: false,
+            harmssquares: false,
             size: 0,
             hitPlatform: function() {
                 this.hits++;
-                this.harmsEnemies = true;
+                this.harmssquares = true;
                 setTimeout(() => {
-                    this.harmsEnemies = false;
+                    this.harmssquares = false;
                 }, 1);
                 if (this.hits === 1) {
                     this.generateHitRectangles(0.5); 
@@ -91,18 +93,20 @@ export function setupPlatforms(canvas, worldBounds) {
             y: Math.random() * (worldBounds.bottom-100),
             width: Math.random() *(worldBounds.right/30) + (worldBounds.right/50),
             height: Math.random() *(worldBounds.bottom/200) + (worldBounds.bottom/100),
+            dx: 0,
             dy: Math.random() *(maxPlatDY - canvas.height/2000)+(canvas.height/2000),
+            xPhysics: 0,
             yPhysics: 0,
             hits: 0,
             color: '#354859', // Initial color
             hitRectangles: [],
-            harmsEnemies: false,
+            harmssquares: false,
             size: 0,
             hitPlatform: function() {
                 this.hits++;
-                this.harmsEnemies = true;
+                this.harmssquares = true;
                 setTimeout(() => {
-                    this.harmsEnemies = false;
+                    this.harmssquares = false;
                 }, 1);
                 if (this.hits === 1) {
                     this.generateHitRectangles(0.5); 
@@ -170,19 +174,21 @@ export function setupPlatforms(canvas, worldBounds) {
             y: worldBounds.bottom/1.6,
             width: 200,
             height: Math.random() *(worldBounds.bottom/200) + (worldBounds.bottom/100),
+            dx: 0,
             dy: Math.random() *(canvas.height/3000)+(canvas.height/2000),
+            xPhysics: 0,
             yPhysics: 0,
             hits: 0,
             color: '#354859', // Initial color
             hitRectangles: [],
-            harmsEnemies: false,
+            harmssquares: false,
             size: 0,
             hitPlatform: function() {
                 this.hits++;
                 
-                this.harmsEnemies = true;
+                this.harmssquares = true;
                 setTimeout(() => {
-                    this.harmsEnemies = false;
+                    this.harmssquares = false;
                 }, 1);
                 if (this.hits === 1) {
                     this.generateHitRectangles(0.5); 
@@ -258,6 +264,7 @@ export function setupPlatforms(canvas, worldBounds) {
         for (let i = platforms.length - 1; i >= 0; i--) {
            platforms[i].size = platforms[i].height * platforms[i].width;
             platforms[i].y+=(platforms[i].dy+platforms[i].yPhysics);
+            platforms[i].x+=(platforms[i].dx+platforms[i].xPhysics);
             platforms.forEach(otherPlatform => {
                 if (otherPlatform !== this) {
                 
@@ -308,26 +315,28 @@ export function setupPlatforms(canvas, worldBounds) {
             const right = platform.x + platform.width;
             
   //left collision
-  if ( ball.x + ball.radius > left && ball.x < left && ball.y + ball.radius > top && ball.y -ball.radius < bottom && ball.dx >= 0 && ball.y+ball.radius > bottom+ball.radius/10) {
+  if ( ball.x + ball.radius > left && ball.x < left && ball.y + ball.radius > top && ball.y -ball.radius < bottom && ball.dx >= 0 && ball.y+ball.radius > bottom+ball.radius/15) {
     console.log('left');
-    ball.x = left - ball.radius;
-    ball.dx += -Math.abs(ball.dx);
+    platform.xPhysics = ball.dx/1.5;
+    ball.strength -= 0.5;
+    
 
 
 }
 
 // Check for right collision
-if ( ball.x - ball.radius < right && ball.x > right && ball.y + ball.radius > top && ball.y -ball.radius < bottom && ball.dx <= 0&& ball.y+ball.radius > bottom+ball.radius/10) {
+if ( ball.x - ball.radius < right && ball.x > right && ball.y + ball.radius > top && ball.y -ball.radius < bottom && ball.dx <= 0&& ball.y+ball.radius > bottom+ball.radius/15) {
 console.log('right');
-    ball.x = right + ball.radius;
-    ball.dx += Math.abs(ball.dx);
+platform.xPhysics = ball.dx/1.5;
+ball.strength -= 0.5;
+    
 
 
 }
     
             
             // Check for top collision
-         if ( ball.y + ball.radius > top && ball.y < top) {
+         if ( ball.y + ball.radius > top && ball.y < top ) {
                 
                 if (ball.x + ball.radius >= left && ball.x - ball.radius <= right) {
                 
@@ -335,11 +344,11 @@ console.log('right');
                     if (right < ball.x) {
                         // Ball is past the right edge, position it on the right corner
                         ball.y = top - Math.sqrt(Math.max(0, ball.radius**2 - (right - ball.x)**2));
-                        ball.dx += ball.radius*(ball.x-right)/10000;
+                        ball.xPhysics += (ball.x-right)/500;
                     } else if (left > ball.x) {
                         // Ball is past the left edge, position it on the left corner
                         ball.y = top - Math.sqrt(Math.max(0, ball.radius**2 - (ball.x - left)**2));
-                        ball.dx += ball.radius*(ball.x-left)/10000;
+                        ball.xPhysics += (ball.x-left)/500;
                     } else {
                         // Ball is directly above the platform
                         ball.y = top - ball.radius;
@@ -349,7 +358,7 @@ console.log('right');
                 if(ball.dy*ball.radius > platform.size/12){
                     
                     platform.yPhysics += (ball.dy); 
-                    
+                    ball.strength -= 0.8;
                     platform.updated = true;
                      // Mark the platform as updated
                     
@@ -382,35 +391,42 @@ console.log('right');
             
             else if ( ball.y - ball.radius < bottom && ball.y > bottom) {
                 
-                if (ball.x  + ball.radius>= left && ball.x - ball.radius <= right) {
+                if ((ball.x  >= left && ball.x  <= right) || (right < ball.x  && ball.y == bottom + Math.sqrt(Math.max(0, ball.radius**2 + (right - ball.x)**2)))||(left > ball.x && ball.y == bottom+ Math.sqrt(Math.max(0, ball.radius**2 + (left-ball.x)**2)))) {
+                    
                     console.log('bottom');
-                    ball.y = bottom + ball.radius;
-                
-            
-                    if ( ball.dy > (canvas.height/2000)){
-                    ballHarming(ball);
-                    splashes.push(new Splash(ball.x, ball.y, ball.radius, 'white'));
-                    }
-                
-                
-                
-                if(ball.dy*ball.radius < -platform.size/25){
+                    if(ball.dy*ball.radius < -platform.size/25){
                     
-                    platform.yPhysics = ball.dy*1.6;
-                    platform.updated = true;
-                     
-                    
-                    platform.hitPlatform();
-                    ball.canDoubleJump = false;
-                    if(platform.hits <3){
+                        platform.yPhysics = ball.dy*1.6;
+                        platform.updated = true;
+                        ball.strength -= 0.8;
                         
-                        ball.dy = Math.abs(ball.dy/5);
+                        platform.hitPlatform();
+                        ball.canDoubleJump = false;
+                        if(platform.hits <3){
+                            
+                            ball.dy = Math.abs(ball.dy)+ball.radius/20;
+                            }
+                            else{
+                                ball.dy = ball.dy/2;
+                                
+                            }
                         }
                         else{
-                            ball.dy = ball.dy/2;
-                            
+                            if ( ball.dy < platform.dy && ball.dy > canvas.height/2000) {
+                        
+                                ballHarming(ball);
+                                splashes.push(new Splash(ball.x, ball.y, ball.radius, 'white'));
+                                }
+                            ball.dy = Math.abs(ball.dy)+ball.radius/20;
                         }
-                    }
+                    
+                
+            
+                    
+                
+                
+                
+                
                 
                         ball.dy = Math.abs(ball.dy/2)+platform.dy;
                     
