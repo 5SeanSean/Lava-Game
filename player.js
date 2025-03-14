@@ -138,13 +138,19 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
     }
 
     function drawProjectiles() {
-        ctx.fillStyle = 'white';
+        
         let projectiles = ball.projectiles;
         projectiles.forEach(projectile => {
+            ctx.save();
             ctx.beginPath();
+            ctx.shadowColor = 'white';
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = 'white';
             ctx.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
             ctx.fill();
             ctx.closePath();
+            ctx.restore();
+            
         });
     }
 
@@ -226,6 +232,7 @@ if (ball.x - ball.radius < worldBounds.left) {
             
             projectile.x += projectile.dx;
             projectile.y += projectile.dy;
+            projectile.dy+=0.05;
            
             let nextProjX = projectile.x + projectile.dx;
             let nextProjY = projectile.y + projectile.dy;
@@ -259,7 +266,7 @@ if (ball.x - ball.radius < worldBounds.left) {
             }
     
             // Remove projectile if it goes out of bounds or ricochets more than 3 times
-            if (projectile.x < ball.x-canvas.width/2 || projectile.x > ball.x+canvas.width/2 || projectile.y < 0 || projectile.y > worldBounds.bottom || projectile.ricochetCount >= 3) {
+            if (projectile.x < ball.x-canvas.width || projectile.x > ball.x+canvas.width || projectile.y < 0 || projectile.y > worldBounds.bottom || projectile.ricochetCount >= 3) {
                 
                 ball.projectiles.splice(i, 1);
             }
@@ -391,7 +398,7 @@ if (ball.x - ball.radius < worldBounds.left) {
     }
     
     function stopShooting(event) {
-        if (event.button === 0 ) { // Left mouse button
+        if (event.button === 0  ) { // Left mouse button
             isShooting = false;
         }
         // Update mouse position
@@ -403,6 +410,7 @@ if (ball.x - ball.radius < worldBounds.left) {
     window.addEventListener('keyup', stopBall);
     canvas.addEventListener('mousedown', startShooting);
     canvas.addEventListener('mouseup', stopShooting);
+    
     canvas.addEventListener('mousemove', (event) => {
         mouseX = event.clientX ;
         mouseY = event.clientY ;

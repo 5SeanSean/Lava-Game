@@ -53,6 +53,7 @@ export function createLava(worldBounds,canvas) {
         width: worldBounds.right,
         height: canvas.height/18,
         draw(ctx) {
+            ctx.save();
             const gradient = ctx.createLinearGradient(this.x, this.y , this.x, this.y- this.height * 5 );
             gradient.addColorStop(0, 'rgba(255, 0, 0, 0.6)');
             gradient.addColorStop(0.05, 'rgba(255, 20, 0, 0.1)');
@@ -67,11 +68,15 @@ export function createLava(worldBounds,canvas) {
             // Draw moving rectangles
             lines.forEach(line => {
                 ctx.fillStyle = line.color;
+                ctx.shadowColor = line.color;
+        
+            ctx.shadowBlur = 5;
                 ctx.fillRect(line.x, line.y, line.width, line.height);
             });
 
             // Draw splashes
             splashes.forEach(splash => splash.draw(ctx));
+            ctx.restore();
         },
 
         update(consumables) {

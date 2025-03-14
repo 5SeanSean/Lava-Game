@@ -149,12 +149,14 @@ function setup() {
             drawWithCamera(() => {
                 background.draw(camera);
                 platformsObj.drawPlatforms(ctx);
-                drawLavaSquares();
+                
                 
                 generalSplashes.forEach(splash => splash.draw(ctx));
                 drawConsumables(ctx, consumables);
-                lava.draw(ctx); // Draw lava
                 drawProjectiles();
+                drawLavaSquares();
+                lava.draw(ctx); // Draw lava
+                
                 drawBall();
                 background.drawOverlay(camera);
                 lava.draw(ctx); // Draw lava

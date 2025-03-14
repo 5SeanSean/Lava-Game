@@ -34,8 +34,8 @@ export class lavaSquare {
     
     draw(ctx, ball) {
         // Draw the stick pointing in the direction of the player
-        
-        const stickLength = this.size; // Length of the stick
+        ctx.save();
+        const stickLength = this.size*((this.health-(this.hitCount/2.5))/this.health); // Length of the stick
         const stickEndX = this.x + this.size / 2 + stickLength * Math.cos(this.angle);
         const stickEndY = this.y + this.size / 2 + stickLength * Math.sin(this.angle);
         const maxOpacity = 1; // Maximum opacity of the overlay
@@ -46,14 +46,11 @@ export class lavaSquare {
         
 
         this.projectiles.forEach(projectile => {
-            ctx.fillStyle = `rgba(${textToRGB('orange')}, 0.2)`;
-        ctx.fillRect(
-            projectile.x - projectile.radius*1.5, 
-            projectile.y - projectile.radius*1.5, 
-            projectile.radius * 3, 
-            projectile.radius * 3
-        );  
+            
         ctx.fillStyle = `rgba(${textToRGB('magma')}, 0.5)`;
+        ctx.shadowColor = 'orange';
+        
+    ctx.shadowBlur = 5;
         ctx.fillRect(
             projectile.x - projectile.radius*1.25, 
             projectile.y - projectile.radius*1.25, 
@@ -75,6 +72,9 @@ export class lavaSquare {
         ctx.lineTo(stickEndX, stickEndY);
         ctx.strokeStyle = this.stickColor;
         ctx.lineWidth = this.size/4;
+        ctx.shadowColor = this.stickColor;
+        
+    ctx.shadowBlur = 10;
         ctx.stroke();
         ctx.closePath();
         ctx.beginPath();
@@ -87,6 +87,9 @@ export class lavaSquare {
     
         // Draw the lavaSquare
         ctx.fillStyle = this.color;
+        ctx.shadowColor = `rgba(${textToRGB(this.color)}, ${1-currentOpacity})`;
+        
+    ctx.shadowBlur = 10;
         ctx.fillRect(this.x, this.y, this.size, this.size);
     
         // Draw lava rectangles
@@ -99,14 +102,17 @@ export class lavaSquare {
             
         
         ctx.fillStyle = rect.color;
+        ctx.shadowColor = rect.color;
+    ctx.shadowBlur = 5;
             ctx.fillRect(this.x + rect.x, this.y + rect.y, rect.width, rect.height);
         });
     
         ctx.restore(); // Restore the context state
         
     ctx.fillStyle = `rgba(255, 255, 255, ${currentOpacity})`;
-    ctx.fillRect(this.x, this.y, this.size, this.size);
     
+    ctx.fillRect(this.x, this.y, this.size, this.size);
+    ctx.restore(); // Restore the context state
     }
     shrinkLavaRectangles() {
         const shrinkFactor = 1.0001; // Adjust this value to control how much the lava rectangles shrink
@@ -141,7 +147,7 @@ export class lavaSquare {
         
         if (this.hitCount >= 30) {
             // Create a new consumable at the lavaSquare's position
-            const consumable = new Consumable(this.x, this.y, this.size, 'white', 'square');
+            const consumable = new Consumable(this.x, this.y, this.size, 'white', 'square',this.xPhysics, this.yPhysics);
         consumables.push(consumable);
         ball.score+=this.size;
     
@@ -213,7 +219,7 @@ export class lavaSquare {
                         
             
                         
-                        this.splashes.push(new Splash(projectile.x, projectile.y,this.size/3,'lava','lavaSquare'));
+                        this.splashes.push(new Splash(projectile.x, projectile.y,this.size/3,'lava','square', projectile.dx, projectile.dy  ));
                         this.dx = projectile.dx;
                         this.dx = projectile.dy;
                         projectile.dx = -this.dx;
@@ -235,12 +241,12 @@ export class lavaSquare {
                 ball.score+=0.1;
     
                 // Increase the hit count
-                this.hitCount+= winSizeConstant * projectile.radius/50;
+                this.hitCount+= winSizeConstant * (0.05 +projectile.radius/500);
                 if(this.hitCount >= 30){
                     ball.score+=this.size;
                     ball.projectiles.splice(index, 1);
                 }
-                this.splashes.push(new Splash(projectile.x, projectile.y,this.size/3,'lava','lavaSquare'));
+                this.splashes.push(new Splash(projectile.x, projectile.y,this.size/3,'lava','square', projectile.dx, projectile.dy,1));
                 this.xPhysics = projectile.dx/5;
                 this.yPhysics = projectile.dy/5;
                 // Reduce the lavaSquare size
@@ -264,25 +270,37 @@ export class lavaSquare {
                 this.y + this.size > platform.y &&
                 this.y < platform.y + platform.height) {
                 
-                if (this.dy <0 && this.y < platform.y + platform.height && this.y + this.size > platform.y + platform.height) {
+                if ( this.y < platform.y + platform.height && this.y + this.size > platform.y + platform.height) {
                     this.y = platform.y +platform.height*1.1;
                         this.dy = Math.abs(this.dy);
                         if(platform.yPhysics>0){
-                            this.yPhysics =  platform.yPhysics *1.1;
+                            platform.yPhysics /= 1.01;
+                            this.yPhysics =  platform.yPhysics *1.2 + platform.dy;
+                            this.dx=0;
+                            this.dy = this.speed;
                             
                             this.hitCount+= this.yPhysics;
-                            platform.yPhysics /= 1.01;
-                            if(platform.hits >=3){
-                                this.hitCount = 30;
-                            }
+                            
+                            
                             
                         }
                     }
-                else if ( this.dy >0 &&this.y + this.size > platform.y && this.y < platform.y) {
+                else if (this.y + this.size > platform.y && this.y < platform.y) {
                     this.y = platform.y - this.size*1.1;
                     this.dy = -Math.abs(this.dy);
+                    if(platform.yPhysics<0){
+                        platform.yPhysics /= 1.01;
+                        this.yPhysics =  platform.yPhysics *1.2 + platform.dy;
+                        this.dx=0;
+                        this.dy = -this.speed;
+                        
+                        this.hitCount+= -this.yPhysics;
+                        
+                        
+                        
+                    }
                 }
-                // Collision from the bottom
+                
                 
                 // Collision from the left
                 else if (this.dx > 0 && this.x + this.size > platform.x && this.x < platform.x) {
@@ -336,12 +354,12 @@ export class lavaSquare {
                     
                     // Collision from the top or bottom
                     if (projectile.y - projectile.radius < platform.y || projectile.y + projectile.radius > platform.y + platform.height) {
-                        this.splashes.push(new Splash(projectile.x, projectile.y,this.size/3,'lava','lavaSquare'));
+                        this.splashes.push(new Splash(projectile.x, projectile.y,this.size/3,'lava','square', platform.dx, platform.dy));
                         this.projectiles.splice(i, 1);
                     }
                     // Collision from the left or right
                     if (projectile.x - projectile.radius < platform.x || projectile.x + projectile.radius > platform.x + platform.width) {
-                        this.splashes.push(new Splash(projectile.x, projectile.y,this.size/3,'lava','lavaSquare'));
+                        this.splashes.push(new Splash(projectile.x, projectile.y,this.size/3,'lava','square', platform.dx, platform.dy));
                         this.projectiles.splice(i, 1);
                     }
                 }
@@ -401,7 +419,7 @@ export class lavaSquare {
             radius: 5,
             dx: dx,
             dy: dy,
-            shape: 'lavaSquare', // Set the shape to 'lavaSquare'
+            shape: 'square', // Set the shape to 'lavaSquare'
             color: getRandomLavaColor() // Initialize projectile color
         });
     }

@@ -19,7 +19,10 @@ export class Consumable {
     }
 
     draw(ctx) {
+        ctx.save();
         ctx.fillStyle = this.color;
+        ctx.shadowColor = 'white';
+        ctx.shadowBlur = 20;
         if (this.shape === 'square') {
             ctx.fillRect(this.x, this.y, this.size, this.size);
         } else if (this.shape === 'circle') {
@@ -28,7 +31,7 @@ export class Consumable {
             ctx.fill();
             ctx.closePath();
         }
-        
+        ctx.restore();
     }
     
     update(platforms, worldBounds) {

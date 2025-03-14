@@ -1,8 +1,9 @@
 // filepath: /h:/Downloads/PLATZIO/splash.js
 import {textToRGB} from './tools.js';
 import { getRandomLavaColor } from './lava.js';
+import { physics } from './physics.js';
 export class Splash {
-    constructor(x, y, radius, color, shape = 'circle') {
+    constructor(x, y, radius, color, shape = 'circle', xPhysics = 0, yPhysics = 0, amount=3) {
         this.x = x;
         this.y = y;
         this.radius = radius;
@@ -13,7 +14,7 @@ export class Splash {
         this.fadeRate = 0.02;
         this.particles = [];
 
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < amount; i++) {
             let particleColor = this.color;
             if (this.color === 'lava') {
                 particleColor = getRandomLavaColor();
@@ -22,8 +23,9 @@ export class Splash {
                 x: x,
                 y: y,
                 radius: Math.random() * this.radius/5 + this.radius/10,
-                dx: (Math.random() - 0.5) * this.radius/10,
-                dy: (Math.random() - 0.5) * this.radius/10,
+                dy: yPhysics/40*Math.random()+yPhysics/20,
+                xPhysics: xPhysics/4+(Math.random() - 0.5) * this.radius/5,
+                yPhysics: yPhysics/4+(Math.random() - 0.5) * this.radius/5,
                 opacity: 1,
                 color: particleColor
             });
@@ -46,10 +48,11 @@ export class Splash {
     }
     update() {
         this.particles.forEach(particle => {
-            particle.x += particle.dx;
-            particle.y += particle.dy;
-            particle.dy += 0.05; // Gravity effect
-            particle.opacity -= 0.02; // Fade out effect
+            particle.x += particle.xPhysics;
+            particle.y += particle.yPhysics+particle.dy;
+            particle.dy += 0.1; // Gravity effect
+            particle.opacity -= 0.01; // Fade out effect
+            physics(particle);
         });
 
         // Remove particles that are no longer visible
