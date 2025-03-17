@@ -35,7 +35,7 @@ export class lavaSquare {
     draw(ctx, ball) {
         // Draw the stick pointing in the direction of the player
         ctx.save();
-        const stickLength = this.size*((this.health-(this.hitCount/2.5))/this.health); // Length of the stick
+        const stickLength = this.size*((this.health-(this.hitCount/3))/this.health); // Length of the stick
         const stickEndX = this.x + this.size / 2 + stickLength * Math.cos(this.angle);
         const stickEndY = this.y + this.size / 2 + stickLength * Math.sin(this.angle);
         const maxOpacity = 1; // Maximum opacity of the overlay
@@ -88,6 +88,11 @@ export class lavaSquare {
         // Draw the lavaSquare
         ctx.fillStyle = this.color;
         ctx.shadowColor = `rgba(${textToRGB(this.color)}, ${1-currentOpacity})`;
+        
+    ctx.shadowBlur = 10;
+        ctx.fillRect(this.x, this.y, this.size, this.size);
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = `rgba(255, 255, 255, ${currentOpacity})`;
         
     ctx.shadowBlur = 10;
         ctx.fillRect(this.x, this.y, this.size, this.size);
@@ -230,7 +235,7 @@ export class lavaSquare {
             }
         });
 
-        // Check for collisions with projectiles
+        // Check for collisions with player projectiles
         ball.projectiles.forEach((projectile, index) => {
             if (projectile.x + projectile.radius > this.x &&
                 projectile.x - projectile.radius < this.x + this.size &&
@@ -238,10 +243,10 @@ export class lavaSquare {
                 projectile.y - projectile.radius < this.y + this.size) {
                 
                 // Remove the projectile
-                ball.score+=0.1;
+                ball.score+=0.5;
     
                 // Increase the hit count
-                this.hitCount+= winSizeConstant * (0.05 +projectile.radius/500);
+                this.hitCount+= winSizeConstant * (projectile.radius/40);
                 if(this.hitCount >= 30){
                     ball.score+=this.size;
                     ball.projectiles.splice(index, 1);
@@ -257,7 +262,7 @@ export class lavaSquare {
                 this.shrinkLavaRectangles();
                 this.x += halfSZ - this.size / 2;
                 this.y += halfSZ - this.size / 2;
-    
+                ball.projectiles.splice(index, 1);
                 
                 
             }

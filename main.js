@@ -7,6 +7,7 @@ import { setupPlayer } from './player.js';
 import { createLava } from './lava.js';
 import { Background } from './background.js';
 import { generalSplashes } from './splash.js';
+import { mouseBall } from './mouseBall.js';
 
 export const winSizeConstant = (1920*1080)/(window.innerWidth * window.innerHeight);
 function setup() {
@@ -17,6 +18,7 @@ function setup() {
     // Set canvas size to fill the screen
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    
     const fadeOverlay = document.getElementById('fadeOverlay');
     // Add this near the top of your setup function
     let isWindowFocused = true;
@@ -126,7 +128,7 @@ function setup() {
     const tickDuration = 1000 / 120; // 128 ticks per second
     setInterval(() => {
         if (gameActive&& isWindowFocused) {
-            updateConsumables(consumables, ball, projectiles, endGame, platforms, worldBounds, lavaSquares, createLava);
+            updateConsumables(consumables, ball, projectiles, endGame, platforms, worldBounds, lavaSquares, canvas);
             updateBall();
             handleShooting();
             updateProjectiles();
@@ -158,8 +160,10 @@ function setup() {
                 lava.draw(ctx); // Draw lava
                 
                 drawBall();
-                background.drawOverlay(camera);
+                
                 lava.draw(ctx); // Draw lava
+                mouseBall(ball,ctx);
+                background.drawOverlay(camera);
             });
         }
         requestAnimationFrame(draw);

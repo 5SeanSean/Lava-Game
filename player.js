@@ -1,4 +1,7 @@
 import { physics } from './physics.js';
+import { winSizeConstant } from './main.js';
+export let mouseXAdjusted = 0;
+export let mouseYAdjusted = 0;
 export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
     const ball = {
         x: worldBounds.right/2,  
@@ -76,15 +79,14 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
     const fireRate = ball.fireRate; 
     let mouseX = 0;
     let mouseY = 0;
-    let mouseXAdjusted = 0;
-    let mouseYAdjusted = 0;
+    
     function drawBall() {
         // Save the current context state
         ctx.save();
         
         // Set up the glow effect
         ctx.shadowColor = 'white';
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = ball.radius/2;
         mouseXAdjusted = mouseX+ pCamera.x;
         mouseYAdjusted = mouseY+ pCamera.y;
         // Draw the stick pointing in the direction of the cursor
@@ -144,7 +146,7 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
             ctx.save();
             ctx.beginPath();
             ctx.shadowColor = 'white';
-            ctx.shadowBlur = 20;
+            ctx.shadowBlur = projectile.radius/2;
             ctx.fillStyle = 'white';
             ctx.arc(projectile.x, projectile.y, projectile.radius, 0, Math.PI * 2);
             ctx.fill();
@@ -159,7 +161,7 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         ball.lastDY = ball.dy;
     
         updatePCamera();
-        document.getElementById('scoreCounter').innerText = `Score: ${Math.round(ball.score) }`;
+        document.getElementById('scoreCounter').innerText = `Score: ${Math.round(ball.score * winSizeConstant) }`;
         
         ball.x += ball.dx* (0.2 +ball.strength*0.8) + ball.xPhysics ;
         
@@ -427,7 +429,10 @@ if (ball.x - ball.radius < worldBounds.left) {
         updateProjectiles,
         handleShooting,
         resetPlayer,
-        ball
+        ball,
+        mouseXAdjusted,
+        mouseYAdjusted,
+        
         
     };
    
