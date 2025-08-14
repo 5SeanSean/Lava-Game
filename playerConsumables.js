@@ -132,7 +132,7 @@ export function updateConsumables(consumables, ball, projectiles, endGame, platf
                 projectile.y - projectile.radius < consumable.y + consumable.size) {
                 
                 // Collision detected with projectile
-                consumable.speed+=projectile.radius/100;
+                consumable.speed+=projectile.radius/10;
                 projectile.dx = -projectile.dx;
                 projectile.dy = -projectile.dy;
                

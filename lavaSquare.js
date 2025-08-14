@@ -8,7 +8,7 @@ import { textToRGB } from './tools.js';
 import {winSizeConstant} from './main.js';
 
 export class lavaSquare {
-    constructor(x, y, size, speed, projectileSpeed, shootInterval, worldBounds, canvas, angle, health =20) {
+    constructor(x, y, size, speed, projectileSpeed, shootInterval, worldBounds, canvas, angle, health =2) {
         this.x = x;
         this.y = y;
         this.size = size;   
@@ -150,7 +150,7 @@ export class lavaSquare {
         this.angle = Math.atan2(ball.y - this.y- this.size/2, ball.x - this.x- this.size/2);
         
         
-        if (this.hitCount >= 30) {
+        if (this.hitCount >= this.health) {
             // Create a new consumable at the lavaSquare's position
             const consumable = new Consumable(this.x, this.y, this.size, 'white', 'square',this.xPhysics, this.yPhysics);
         consumables.push(consumable);

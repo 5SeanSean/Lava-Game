@@ -15,9 +15,10 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         isJumping: false,
         canDoubleJump: true,
         friction: canvas.height/1080,
-        fireRate: 1,//4 per second
+        fireRate: 200,//4 per second
         projSpeed: canvas.height/50,
-        
+        currentStock: 10,
+        maxStock: 10,
         isGameRunning: false,
         projectiles: [],
         score: 0,
@@ -48,6 +49,7 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         ball.y = canvas.height/16;
         ball.dx = 0;
         ball.dy = 0;
+        ball.currentStock = ball.maxStock;
         ball.isJumping = false;
         ball.canDoubleJump = true; // Reset double jump when game ends
         ball.radius= canvas.height/18;
@@ -92,7 +94,7 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         // Draw the stick pointing in the direction of the cursor
         
         
-        const stickLength = ball.radius * 1.7; // Length of the stick
+        const stickLength = (ball.radius) * (ball.currentStock/ ball.maxStock)+ball.radius; // Length of the stick
         const stickEndX = ball.x + stickLength * Math.cos(ball.angle);
         const stickEndY = ball.y + stickLength * Math.sin(ball.angle);
     
@@ -100,7 +102,7 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
     ctx.moveTo(ball.x, ball.y);
     ctx.lineTo(stickEndX, stickEndY);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.lineWidth = ball.radius / 3;
+    ctx.lineWidth = ball.radius / 2;
     ctx.stroke();
     ctx.closePath();
         
@@ -108,7 +110,7 @@ export function setupPlayer(canvas, ctx, platforms, endGame, worldBounds) {
         ctx.moveTo(ball.x, ball.y);
         ctx.lineTo(stickEndX, stickEndY);
         ctx.strokeStyle = 'white';
-        ctx.lineWidth = ball.radius / 4;
+        ctx.lineWidth = ball.radius / 3;
         ctx.stroke();
         ctx.closePath();
     
@@ -367,9 +369,12 @@ if (ball.x - ball.radius < worldBounds.left) {
             
         }
     }
-
+//current
     function shootProjectile() {
-    
+        if(ball.currentStock <= 0){
+            reload();
+        }; // Prevent shooting if no stock left
+        ball.currentStock--;
         const speed = ball.projSpeed;
         const dx = speed * Math.cos(ball.angle);
         const dy = speed * Math.sin(ball.angle);
@@ -384,6 +389,24 @@ if (ball.x - ball.radius < worldBounds.left) {
            
         });
     }
+    function reload(){
+        for (let i = 0; i < 5; i++) {
+                
+                setTimeout(ball.radius *= 1.02, 30*i);
+        }
+reloadHelper();
+            for (let i = 0; i < ball.maxStock-1; i++) {
+                setTimeout(reloadHelper, 10*i); // Delay reload by 1 second
+        }
+                
+    }
+    
+    function reloadHelper(){
+        ball.currentStock++;
+            ball.radius /=1.02;
+    }
+
+    
 
     function startShooting(event) {
         if (event.button === 0 && ball.isGameRunning) { // Left mouse button
