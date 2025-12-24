@@ -1,36 +1,43 @@
 // filepath: /h:/Downloads/PLATZIO/main.js
-import { worldBounds,setupView } from './view.js';
-import { drawConsumables, updateConsumables } from './playerConsumables.js';
+import { worldBounds, setupView } from './view.js';
+import { drawConsumables, updateConsumables } from './consumableEnemies.js';
 import { setupPlatforms } from './platforms.js';
-import { setupLavaSquares } from './lavaSquare.js';
+import { setupLavaSquares } from './lavaSquareEnemies.js';
 import { setupPlayer } from './player.js';
 import { createLava } from './lava.js';
 import { Background } from './background.js';
-import { generalSplashes } from './splash.js';
 import { mouseBall } from './mouseBall.js';
+import { generalSplashes, cleanupGeneralSplashes } from './splash.js';
+import { GAME_CONFIG } from './config.js';
+import { initializePools } from './objectPool.js';
 
-export const winSizeConstant = (1920*1080)/(window.innerWidth * window.innerHeight);
+export const winSizeConstant = (1920 * 1080) / (window.innerWidth * window.innerHeight);
+
 function setup() {
+    // Initialize object pools
+    initializePools();
     
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-
+    
     // Set canvas size to fill the screen
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     
     const fadeOverlay = document.getElementById('fadeOverlay');
-    // Add this near the top of your setup function
     let isWindowFocused = true;
+    let lastFrameTime = 0;
+    let frameCount = 0;
+    let fps = 0;
+    
     window.addEventListener('focus', () => {
         isWindowFocused = true;
-        
     });
     
     window.addEventListener('blur', () => {
         isWindowFocused = false;
-        
     });
+    
     function fadeIn() {
         fadeOverlay.style.opacity = '1';
         fadeOverlay.style.display = 'block';
@@ -38,138 +45,155 @@ function setup() {
             fadeOverlay.style.opacity = '0';
             setTimeout(() => {
                 fadeOverlay.style.display = 'none';
-            }, 2000); // Hide the overlay after the fade transition completes
+            }, 2000);
         }, 100);
     }
-
+    
     // Initial fade in
     fadeIn();
     
-
-    // Initialize platform-related functions and variables
+    // Initialize game systems
     const platformsObj = setupPlatforms(canvas, worldBounds);
-    const platforms = platformsObj.platforms; // Extract the platforms array
+    const platforms = platformsObj.platforms;
     const updatePlatforms = platformsObj.updatePlatforms;
-    const { drawBall, drawProjectiles, updateBall, updateProjectiles, handleShooting, ball, projectiles, resetPlayer } = setupPlayer(canvas, ctx, platforms, endGame, worldBounds);
+    
+    const { drawBall, drawProjectiles, updateBall, updateProjectiles, handleShooting, ball, projectiles, resetPlayer } = 
+        setupPlayer(canvas, ctx, platforms, endGame, worldBounds);
+    
     const background = new Background(canvas, worldBounds);
-
-    // Define the consumables array
     const consumables = [];
     let gameActive = true;
-
-    // Initialize lava
     let lava = createLava(worldBounds, canvas);
-
-    // Define the endGame function
-
+    
     function endGame() {
         ball.isGameRunning = false;
-        // Display the overlay and restart button
         const overlay = document.getElementById('gameOverlay');
         overlay.style.visibility = 'visible';
-        gameActive = false; // Set gameActive to false to stop all entities
-
-        // Show the score counter at the middle of the screen
-        const scoreCounter = document.getElementById('scoreCounter');
+        gameActive = false;
         
+        const scoreCounter = document.getElementById('scoreCounter');
         scoreCounter.style.top = '65%';
         scoreCounter.style.left = '50%';
         scoreCounter.style.transform = 'translate(-50%, -50%)';
     }
- 
-
-    // Initialize player-related functions and variables first
-   
-
-    // Initialize view-related functions and variables
-    const { camera, updateCamera, clearCanvas, drawWithCamera } = setupView(canvas, ctx, ball);
-
-    // Initialize square-related functions and variables
-    const { drawLavaSquares, updateLavaSquares, lavaSquares } = setupLavaSquares(canvas, ctx, ball, endGame, platforms, projectiles, consumables, worldBounds);
     
-    // Add event listener for the restart button
-    document.getElementById('restartButton').addEventListener('click', () => {
+    const { camera, updateCamera, clearCanvas, drawWithCamera } = setupView(canvas, ctx, ball);
+    const { drawLavaSquares, updateLavaSquares, lavaSquares } = 
+        setupLavaSquares(canvas, ctx, ball, endGame, platforms, projectiles, consumables, worldBounds);
+    
+    // Restart button event listener
+    document.getElementById('restartButton').addEventListener('click', restartGame);
+    
+    // Spacebar restart
+    document.addEventListener('keydown', (event) => {
+        if (event.code === 'Space' && !gameActive) {
+            restartGame();
+        }
+    });
+    
+    function restartGame() {
         resetPlayer();
-        lavaSquares.length = 0; // Clear the squares array
-       
-        platformsObj.generatePlatforms(); // No need to pass worldBounds
-        consumables.length = 0; // Clear the consumables array
-        lava = createLava(worldBounds, canvas); // Re-initialize lava
+        lavaSquares.length = 0;
+        platformsObj.generatePlatforms();
+        consumables.length = 0;
+        lava = createLava(worldBounds, canvas);
         document.getElementById('gameOverlay').style.visibility = 'hidden';
-        gameActive = true; // Set gameActive to true to resume the game
+        gameActive = true;
+        
         const scoreCounter = document.getElementById('scoreCounter');
-       
         scoreCounter.style.top = '2%';
         scoreCounter.style.left = '2%';
         scoreCounter.style.transform = 'translate(0,0)';
         fadeIn();
-    });
-
-    // Add event listener for the spacebar to reset the game
-    document.addEventListener('keydown', (event) => {
-        if (event.code === 'Space' && !gameActive) {
-            resetPlayer();
-            lavaSquares.length = 0; // Clear the squares array
-           
-            platformsObj.generatePlatforms(); // No need to pass worldBounds
-            consumables.length = 0;
-            lava = createLava(worldBounds, canvas); // Re-initialize lava
-            document.getElementById('gameOverlay').style.visibility = 'hidden';
-
-            gameActive = true; // Set gameActive to true to resume the game
-            scoreCounter.style.top = '2%';
-        scoreCounter.style.left = '2%';
-        scoreCounter.style.transform = 'translate(0,0)';
-            fadeIn();
-        }
-    });
+    }
     
-    // Update game logic at 128 ticks per second using setInterval
-    const tickDuration = 1000 / 120; // 128 ticks per second
-    setInterval(() => {
-        if (gameActive&& isWindowFocused) {
-            updateConsumables(consumables, ball, projectiles, endGame, platforms, worldBounds, lavaSquares, canvas);
-            updateBall();
-            handleShooting();
-            updateProjectiles();
-            generalSplashes.forEach(splash => {
-                splash.update();
-                });
-                updateLavaSquares();
-            
-            updatePlatforms(ball);
-            lava.update(consumables); // Update lava
-            lava.handleCollision(ball, endGame); // Check collision with lava
+    // Fixed timestep game loop
+    let accumulator = 0;
+    let lastTime = 0;
+    
+    function gameLoop(currentTime) {
+        const deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+        
+        // Calculate FPS
+        frameCount++;
+        if (currentTime - lastFrameTime >= 1000) {
+            fps = frameCount;
+            frameCount = 0;
+            lastFrameTime = currentTime;
+            // Optional: log FPS for debugging
+            // console.log(`FPS: ${fps}`);
         }
-    }, tickDuration);
-
-    // Draw game elements using requestAnimationFrame
-    function draw() {
-        if (gameActive) {
-            clearCanvas();
-            updateCamera();
-            drawWithCamera(() => {
-                background.draw(camera);
-                platformsObj.drawPlatforms(ctx);
-                
-                
-                generalSplashes.forEach(splash => splash.draw(ctx));
-                drawConsumables(ctx, consumables);
-                drawProjectiles();
-                drawLavaSquares();
-                lava.draw(ctx); // Draw lava
-                
-                drawBall();
-                
-                lava.draw(ctx); // Draw lava
-                mouseBall(ball,ctx);
-                background.drawOverlay(camera);
-            });
+        
+        if (gameActive && isWindowFocused) {
+            // Fixed timestep physics update
+            accumulator += deltaTime;
+            while (accumulator >= GAME_CONFIG.TICK_DURATION) {
+                updateGameLogic(GAME_CONFIG.TICK_DURATION);
+                accumulator -= GAME_CONFIG.TICK_DURATION;
+            }
         }
-        requestAnimationFrame(draw);
+        
+        // Always draw, even if game is paused
+        draw();
+        
+        requestAnimationFrame(gameLoop);
+    }
+    
+    function updateGameLogic(deltaTime) {
+        updateConsumables(consumables, ball, projectiles, endGame, platforms, worldBounds, lavaSquares, canvas);
+        updateBall();
+        handleShooting();
+        updateProjectiles();
+        
+        // Clean up old splashes
+        cleanupGeneralSplashes();
+        
+        updateLavaSquares();
+        updatePlatforms(ball);
+        lava.update(consumables);
+        lava.handleCollision(ball, endGame);
     }
 
-    draw();
+
+    
+    function draw() {
+        if (!gameActive) {
+            // Still draw something when game is over
+            clearCanvas();
+            background.draw(camera);
+            return;
+        }
+        
+        clearCanvas();
+        updateCamera();
+        
+        drawWithCamera(() => {
+            // Draw background
+            background.draw(camera);
+            
+            // Batch drawing operations
+            ctx.save();
+            platformsObj.drawPlatforms(ctx);
+            drawConsumables(ctx, consumables);
+            drawProjectiles();
+            drawLavaSquares();
+            lava.draw(ctx);
+            drawBall();
+          
+            mouseBall(ball, ctx);
+            background.drawOverlay(camera);
+            ctx.restore();
+            
+        });
+        
+        // Draw FPS counter (optional, for debugging)
+        // drawFPS(ctx);
+    }
+    
+    
+    // Start the game loop
+    requestAnimationFrame(gameLoop);
 }
 
 window.onload = setup;

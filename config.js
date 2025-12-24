@@ -1,0 +1,14 @@
+// filepath: /h:/Downloads/PLATZIO/config.js
+export const GAME_CONFIG = {
+    TICK_RATE: 120,
+    TICK_DURATION: 1000 / 120,
+    WORLD_SCALE: 3,
+    PLATFORM_COUNT: 60,
+    MAX_LAVA_SQUARES: 20,
+    PHYSICS_DAMPING: 1.1,
+    SPAWN_INTERVAL: 100,
+    CELL_SIZE: 100,
+    MAX_PARTICLES: 1000,
+    MAX_PROJECTILES: 50,
+    MAX_SPLASHES: 200
+};
